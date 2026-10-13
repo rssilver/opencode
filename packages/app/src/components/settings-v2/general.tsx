@@ -271,6 +271,35 @@ const LanguageSetting = () => {
   )
 }
 
+const CollapseThinkingBlocksSetting = () => {
+  const language = useLanguage()
+  const settings = useSettings()
+  const options = createMemo(() => [
+    { value: "yes", label: language.t("settings.general.row.collapseThinkingBlocks.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseThinkingBlocks.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
+  ])
+  return (
+    <SettingsRowV2
+      title={language.t("settings.general.row.collapseThinkingBlocks.title")}
+      description={language.t("settings.general.row.collapseThinkingBlocks.description")}
+    >
+      <div data-action="settings-collapse-thinking-blocks">
+        <SelectV2
+          appearance="inline"
+          options={options()}
+          placement="bottom-end"
+          gutter={6}
+          current={options().find((option) => option.value === settings.general.collapseThinkingBlocks())}
+          value={(option) => option.value}
+          label={(option) => option.label}
+          onSelect={(option) => option && settings.general.setCollapseThinkingBlocks(option.value)}
+        />
+      </div>
+    </SettingsRowV2>
+  )
+}
+
 export const SettingsGeneralV2: Component<{
   sessionID?: string
 }> = (props) => {
@@ -368,6 +397,8 @@ export const SettingsGeneralV2: Component<{
             />
           </div>
         </SettingsRowV2>
+
+        <CollapseThinkingBlocksSetting />
 
         <Show when={mobile() && import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"}>
           <SettingsRowV2

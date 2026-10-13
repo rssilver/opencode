@@ -1,3 +1,14 @@
+# Agent Notes
+
+This file merges two concerns:
+
+- **Parent repository conventions** — the upstream `opencode` guidance below, kept verbatim.
+- **Local additions** — appended at the end; documents this working session's changelog/spec workflow and features added to the code.
+
+See [`spec.md`](./spec.md) for repo documentation (including a section on the features added here) and [`changelog.md`](./changelog.md) for this session's change record.
+
+> **Note:** Everything from "To regenerate the legacy JavaScript SDK" through the end of this file is part of the parent repository (`opencode`). These sections are preserved as-is; local, session-specific guidance lives in the appended sections at the bottom.
+
 - To regenerate the legacy JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
 - After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
 - Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
@@ -159,3 +170,31 @@ const table = sqliteTable("session", {
 - Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
 - Keep EventV2 replay owner claims separate from clustered Session execution ownership.
 - Keep the System Context algebra, registry, and built-ins in `src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+
+## Local additions — this working session
+
+These sections document changes made outside the parent repo during this session. They do not affect upstream behavior and can be removed without impacting `opencode`.
+
+### Changelog workflow
+
+Record every change from this session in [`changelog.md`](./changelog.md), grouped by area, with a dated header per entry. Keep entries factual: files touched, behavior changed, and verification done. Do not edit the parent-repo conventions above for session changes — put them in the changelog instead.
+
+Template:
+
+```md
+### YYYY-MM-DD — <short summary>
+
+- **<area>** — what changed and where (file paths).
+- Behavior or defaults that changed.
+- i18n or config additions.
+- Verification (typecheck, tests, build artifacts with paths).
+```
+
+### Features added to the code
+
+See [`spec.md`](./spec.md#features-added-this-session) for the full documentation of features introduced in this session:
+
+- `collapseThinkingBlocks` general setting (`yes` / `once-complete` default / `no`) with collapsible reasoning blocks, on both v1 and v2 settings surfaces.
+- Dark mode enabled by default for new installs.
+- All general toggles enabled by default (except `editToolPartsExpanded`).
+- Collapsible thinking-block arrow UX fix (single glyph, size match, RTL-safe).

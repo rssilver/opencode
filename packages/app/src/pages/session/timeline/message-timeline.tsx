@@ -1020,19 +1020,20 @@ export function MessageTimeline(props: {
         {(message) => (
           <Show when={part()}>
             {(part) => (
-              <MessagePart
-                part={part()}
-                message={message()}
-                showAssistantCopyPartID={assistantCopyPartID(row().userMessageID)}
-                turnDurationMs={turnDurationMs(row().userMessageID)}
-                useV2Actions={settings.general.newLayoutDesigns()}
-                defaultOpen={defaultOpen()}
-                toolOpen={toolOpen[part().id] ?? defaultOpen()}
-                onToolOpenChange={(open) => setToolOpen(part().id, open)}
-                deferToolContent
-                virtualizeDiff={false}
-                onContentRendered={onSizeChange}
-              />
+               <MessagePart
+                 part={part()}
+                 message={message()}
+                 showAssistantCopyPartID={assistantCopyPartID(row().userMessageID)}
+                 turnDurationMs={turnDurationMs(row().userMessageID)}
+                 useV2Actions={settings.general.newLayoutDesigns()}
+                 defaultOpen={defaultOpen()}
+                 toolOpen={toolOpen[part().id] ?? defaultOpen()}
+                 onToolOpenChange={(open) => setToolOpen(part().id, open)}
+                 deferToolContent
+                 virtualizeDiff={false}
+                 onContentRendered={onSizeChange}
+                 thinkingCollapseMode={settings.general.collapseThinkingBlocks}
+               />
             )}
           </Show>
         )}

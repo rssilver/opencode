@@ -209,6 +209,12 @@ export const SettingsGeneral: Component = () => {
     { value: "dark", label: language.t("theme.scheme.dark") },
   ])
 
+  const collapseThinkingBlocksOptions = createMemo((): { value: "yes" | "once-complete" | "no"; label: string }[] => [
+    { value: "yes", label: language.t("settings.general.row.collapseThinkingBlocks.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseThinkingBlocks.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
+  ])
+
   const languageOptions = createMemo(() =>
     language.locales.map((locale) => ({
       value: locale,
@@ -382,9 +388,27 @@ export const SettingsGeneral: Component = () => {
             />
           </div>
         </SettingsRow>
-      </SettingsList>
-    </div>
-  )
+
+        <SettingsRow
+          title={language.t("settings.general.row.collapseThinkingBlocks.title")}
+          description={language.t("settings.general.row.collapseThinkingBlocks.description")}
+        >
+          <Select
+            data-action="settings-collapse-thinking-blocks"
+            options={collapseThinkingBlocksOptions()}
+            current={collapseThinkingBlocksOptions().find((o) => o.value === settings.general.collapseThinkingBlocks())}
+            value={(o) => o.value}
+            label={(o) => o.label}
+            onSelect={(option) => option && settings.general.setCollapseThinkingBlocks(option.value)}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+            triggerStyle={{ "min-width": "180px" }}
+          />
+         </SettingsRow>
+       </SettingsList>
+     </div>
+   )
 
   const AdvancedSection = () => (
     <div class="flex flex-col gap-1">

@@ -1,4 +1,4 @@
-import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
+﻿import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
   ...DESKTOP_NATIVE_ENGLISH,
@@ -253,8 +253,8 @@ export const dict = {
   "prompt.placeholder.shell": "Enter shell command... {{example}}",
   "prompt.placeholder.normal": 'Ask anything... "{{example}}"',
   "prompt.placeholder.simple": "Ask anything...",
-  "prompt.placeholder.summarizeComments": "Summarize comments…",
-  "prompt.placeholder.summarizeComment": "Summarize comment…",
+  "prompt.placeholder.summarizeComments": "Summarize commentsâ€¦",
+  "prompt.placeholder.summarizeComment": "Summarize commentâ€¦",
   "prompt.mode.shell": "Shell",
   "prompt.mode.normal": "Prompt",
   "prompt.mode.shell.exit": "esc to exit",
@@ -418,7 +418,7 @@ export const dict = {
   "wsl.onboarding.distroStatus.checking": "Checking...",
   "wsl.onboarding.distroStatus.opencodeMissing": "OpenCode not installed",
   "wsl.onboarding.distroStatus.missingTools": "Missing bash, curl",
-  "wsl.onboarding.distroStatus.unsupported": "Unsupported · Use WSL 2",
+  "wsl.onboarding.distroStatus.unsupported": "Unsupported Â· Use WSL 2",
   "wsl.onboarding.needAnotherDistro": "Need another distro?",
   "wsl.onboarding.needAnotherDistroHint": "Install a Linux distribution from the WSL catalog",
   "wsl.onboarding.wslNotInstalled.title": "WSL not installed",
@@ -518,23 +518,23 @@ export const dict = {
   "context.usage.view": "View context usage",
 
   "language.en": "English",
-  "language.zh": "简体中文",
-  "language.zht": "繁體中文",
-  "language.ko": "한국어",
+  "language.zh": "ç®€ä½“ä¸­æ–‡",
+  "language.zht": "ç¹é«”ä¸­æ–‡",
+  "language.ko": "í•œêµ­ì–´",
   "language.de": "Deutsch",
-  "language.es": "Español",
-  "language.fr": "Français",
+  "language.es": "EspaÃ±ol",
+  "language.fr": "FranÃ§ais",
   "language.da": "Dansk",
-  "language.ja": "日本語",
+  "language.ja": "æ—¥æœ¬èªž",
   "language.pl": "Polski",
-  "language.ru": "Русский",
-  "language.ar": "العربية",
+  "language.ru": "Ð ÑƒÑÑÐºÐ¸Ð¹",
+  "language.ar": "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©",
   "language.no": "Norsk",
-  "language.br": "Português (Brasil)",
+  "language.br": "PortuguÃªs (Brasil)",
   "language.bs": "Bosanski",
-  "language.uk": "Українська",
-  "language.th": "ไทย",
-  "language.tr": "Türkçe",
+  "language.uk": "Ð£ÐºÑ€Ð°Ñ—Ð½ÑÑŒÐºÐ°",
+  "language.th": "à¹„à¸—à¸¢",
+  "language.tr": "TÃ¼rkÃ§e",
 
   "toast.language.title": "Language",
   "toast.language.description": "Switched to {{language}}",
@@ -732,7 +732,7 @@ export const dict = {
   "session.new.workspace.runIn": "Run session in",
   "session.new.workspace.triggerLocal": "Local",
   "session.new.workspace.local": "Local repository",
-  "session.new.workspace.existing": "Workspace…",
+  "session.new.workspace.existing": "Workspaceâ€¦",
   "session.new.git.none": "No Git",
   "session.new.lastModified": "Last modified",
 
@@ -951,6 +951,11 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "Expand edit tool parts",
   "settings.general.row.editToolPartsExpanded.description":
     "Show edit, write, and patch tool parts expanded by default in the timeline",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
   "settings.general.row.newInterface.title": "New layout",
   "settings.general.row.newInterface.badge": "New",
   "settings.general.row.newInterface.description":
@@ -1148,3 +1153,4 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sessions will be archived.",
   "workspace.reset.note": "This will reset the workspace to match the default branch.",
 }
+

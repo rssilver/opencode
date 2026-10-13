@@ -317,6 +317,20 @@
   }
 }
 
+[data-slot="reasoning-chevron"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-slot="reasoning-chevron"].reasoning-chevron-open {
+  transform: rotate(90deg);
+}
+
+:dir(rtl) [data-slot="reasoning-chevron"].reasoning-chevron-open {
+  transform: rotate(-90deg);
+}
+
 @media (prefers-color-scheme: dark) {
   [data-component="reasoning-part"] [data-component="markdown"] :not(pre) > code {
     opacity: 0.6;
