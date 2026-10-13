@@ -274,7 +274,7 @@ const LanguageSetting = () => {
 const CollapseThinkingBlocksSetting = () => {
   const language = useLanguage()
   const settings = useSettings()
-  const options = createMemo(() => [
+  const options = createMemo<({ value: "yes" | "once-complete" | "no"; label: string }[])>(() => [
     { value: "yes", label: language.t("settings.general.row.collapseThinkingBlocks.option.yes") },
     { value: "once-complete", label: language.t("settings.general.row.collapseThinkingBlocks.option.onceComplete") },
     { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
