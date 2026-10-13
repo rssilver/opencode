@@ -175,6 +175,10 @@ const table = sqliteTable("session", {
 
 These sections document changes made outside the parent repo during this session. They do not affect upstream behavior and can be removed without impacting `opencode`.
 
+## Build (electron desktop)
+
+- When the user says **"rebuild"** for this workspace, they mean the **Electron desktop app**: run `bun run build` (`electron-vite build`) then `bun run package` (`electron-builder --config electron-builder.config.ts`) from `packages/desktop`. On Windows this produces an NSIS installer at `packages/desktop/dist/opencode-desktop-win-x64.exe`.
+
 ### Changelog workflow
 
 Record every change from this session in [`changelog.md`](./changelog.md), grouped by area, with a dated header per entry. Keep entries factual: files touched, behavior changed, and verification done. Do not edit the parent-repo conventions above for session changes — put them in the changelog instead.
