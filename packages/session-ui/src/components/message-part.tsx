@@ -1792,7 +1792,6 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
           <Collapsible.Trigger>
             <div data-slot="reasoning-part-trigger" class="flex items-center gap-2">
               <span data-slot="reasoning-part-label" class="min-w-0 flex items-center gap-2 text-14-medium text-text-strong">
-                <Icon name="brain" size="small" />
                 <TextShimmer text={i18n.t("ui.sessionTurn.status.thinking")} active={streaming()} />
               </span>
               <div
