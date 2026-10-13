@@ -1775,11 +1775,15 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
     () => props.message.role === "assistant" && typeof (props.message as AssistantMessage).time.completed !== "number",
   )
   const text = () => readPartText(data.store.part_text_accum_delta, part())
+  const hasNonReasoningContent = createMemo(() => {
+    const messageParts = data.store.part[props.message.id] ?? []
+    return messageParts.some((p) => p.type !== "reasoning" && readPartText(data.store.part_text_accum_delta, p) !== "")
+  })
 
   const mode = () => props.thinkingCollapseMode?.() ?? "no"
   const defaultOpen = createMemo(() => {
     if (mode() === "yes") return false
-    if (mode() === "once-complete") return streaming()
+    if (mode() === "once-complete") return streaming() && !hasNonReasoningContent()
     return true
   })
   const [userOpen, setUserOpen] = createSignal<boolean | undefined>(undefined)
