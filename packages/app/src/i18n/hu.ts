@@ -980,7 +980,7 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.description":
     "Az idÅ‘vonalon alapÃ©rtelmezÃ©s szerint kibontott szerkesztÃ©si, Ã­rÃ¡si Ã©s javÃ­tÃ¡si eszkÃ¶zrÃ©szek megjelenÃ­tÃ©se",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

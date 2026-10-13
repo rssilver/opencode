@@ -966,7 +966,7 @@
   "settings.general.row.editToolPartsExpanded.description":
     "áž”áž„áŸ’áž áž¶áž‰áž€áž¶ážšáž€áŸ‚ážŸáž˜áŸ’ážšáž½áž› ážŸážšážŸáŸážš áž“áž·áž„áž•áŸ’áž“áŸ‚áž€áž§áž”áž€ážšážŽáŸáž”áŸ†ážŽáŸ‡ážŠáŸ‚áž›áž”áž¶áž“áž–áž„áŸ’ážšáž¸áž€ážáž¶áž˜áž›áŸ†áž“áž¶áŸ†ážŠáž¾áž˜áž“áŸ…áž€áŸ’áž“áž»áž„áž”áž“áŸ’áž‘áž¶ážáŸ‹áž–áŸáž›ážœáŸáž›áž¶",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

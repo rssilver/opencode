@@ -933,7 +933,7 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "å±•é–‹ edit å·¥å…·å€å¡Š",
   "settings.general.row.editToolPartsExpanded.description": "åœ¨æ™‚é–“è»¸ä¸­é è¨­å±•é–‹ editã€write å’Œ patch å·¥å…·å€å¡Š",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

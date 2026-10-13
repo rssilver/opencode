@@ -789,7 +789,7 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.description":
     "Edit-, Write- und Patch-Tool-Abschnitte standardmÃ¤ÃŸig in der Timeline ausgeklappt anzeigen",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

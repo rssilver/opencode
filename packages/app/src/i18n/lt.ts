@@ -985,7 +985,7 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.description":
     "Rodyti pagal numatytuosius nustatymus laiko juostoje iÅ¡plÄ—stas redagavimo, raÅ¡ymo ir pataisymo Ä¯rankio dalis",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

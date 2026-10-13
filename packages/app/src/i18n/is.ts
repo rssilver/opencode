@@ -971,7 +971,7 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.description":
     "SÃ½na breytinga-, skrifa- og plÃ¡straverkfÃ¦ri hluta sjÃ¡lfgefiÃ° stÃ¦kkaÃ° Ã¡ tÃ­malÃ­nunni",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

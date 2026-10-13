@@ -986,7 +986,7 @@
   "settings.general.row.editToolPartsExpanded.description":
     "á€¡á€á€»á€­á€”á€ºá€‡á€šá€¬á€¸á€á€½á€„á€º á€•á€¯á€¶á€žá€±á€–á€¼á€„á€·á€º á€á€»á€²á€·á€‘á€½á€„á€ºá€‘á€¬á€¸á€žá€±á€¬ á€á€Šá€ºá€¸á€–á€¼á€á€ºá€á€¼á€„á€ºá€¸áŠ á€›á€±á€¸á€žá€¬á€¸á€á€¼á€„á€ºá€¸á€”á€¾á€„á€·á€º á€–á€¬á€‘á€±á€¸á€á€¼á€„á€ºá€¸ á€€á€­á€›á€­á€šá€¬á€¡á€…á€­á€á€ºá€¡á€•á€­á€¯á€„á€ºá€¸á€™á€»á€¬á€¸á€€á€­á€¯ á€•á€¼á€žá€•á€«á‹",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",

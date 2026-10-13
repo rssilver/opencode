@@ -974,7 +974,7 @@
   "settings.general.row.editToolPartsExpanded.description":
     "ÐŸÑ€Ð¸ÐºÐ°Ð¶Ð¸Ñ‚Ðµ Ð´ÐµÐ»Ð¾Ð²Ðµ Ð°Ð»Ð°Ñ‚Ð° Ð·Ð° ÑƒÑ€ÐµÑ’Ð¸Ð²Ð°ÑšÐµ, Ð¿Ð¸ÑÐ°ÑšÐµ Ð¸ Ð·Ð°ÐºÑ€Ð¿Ðµ Ð¿Ñ€Ð¾ÑˆÐ¸Ñ€ÐµÐ½Ðµ Ð¿Ð¾Ð´Ñ€Ð°Ð·ÑƒÐ¼ÐµÐ²Ð°Ð½Ð¾ Ð½Ð° Ð²Ñ€ÐµÐ¼ÐµÐ½ÑÐºÐ¾Ñ˜ Ð»Ð¸Ð½Ð¸Ñ˜Ð¸",
   "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
-  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections, like tool calls.",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
