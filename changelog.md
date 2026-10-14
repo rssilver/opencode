@@ -65,21 +65,11 @@ features added here.
   (`packages/app/src/context/settings.tsx`). The old boolean `shellToolPartsExpanded`
   key is now ignored, so every user (existing or new) defaults to `once-complete`.
 
-### Known issue: Select dropdown selection does not stick (settings, both surfaces)
+### Known issue (deferred)
 
-When opening the shell (and thinking) collapse dropdown and choosing an option,
-the choice does not register as selected and the dropdown cannot be reopened until
-the settings menu is left and re-entered. Observed on `packages/app/src/components/settings-general.tsx` / `settings-v2/general.tsx`.
-
-- Root cause: `packages/ui/src/components/select.tsx` passes the whole option
-  object to Kobalte as `value={local.current}` while also supplying `optionValue`,
-  which derives a string key per item. In controlled mode Kobalte compares its
-  stored value against those keys, so an object never reconciles after `onChange`;
-  the selected state and open flag get stuck until the component remounts (leaving
-  settings). Both dropdowns share this wrapper and are affected identically; it
-  shipped untested because no test drives an actual selection interaction.
-- Status: deferred per product. The intended default (`once-complete`) is applied
-  regardless, so users get the desired behavior without needing to select it.
+The shell and thinking collapse dropdown selection does not stick — see
+[`bugs.md`](./bugs.md). The intended default (`once-complete`) applies regardless,
+so users get the desired behavior without needing to select it.
 
 ### Collapsible arrow UX fix (session-ui)
 - The thinking-block chevron now uses a single `chevron-right` glyph for both

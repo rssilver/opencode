@@ -5,7 +5,7 @@ This file merges two concerns:
 - **Parent repository conventions** — the upstream `opencode` guidance below, kept verbatim.
 - **Local additions** — appended at the end; documents this working session's changelog/spec workflow and features added to the code.
 
-See [`spec.md`](./spec.md) for repo documentation (including a section on the features added here) and [`changelog.md`](./changelog.md) for this session's change record.
+See [`spec.md`](./spec.md) for repo documentation (including a section on the features added here), [`changelog.md`](./changelog.md) for this session's change record, and [`bugs.md`](./bugs.md) for deferred / known bugs.
 
 > **Note:** Everything from "To regenerate the legacy JavaScript SDK" through the end of this file is part of the parent repository (`opencode`). These sections are preserved as-is; local, session-specific guidance lives in the appended sections at the bottom.
 
