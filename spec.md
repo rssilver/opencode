@@ -79,9 +79,9 @@ type.
   thinking setting (`settings-general.tsx`; `CollapseShellToolsSetting` in
   `packages/app/src/components/settings-v2/general.tsx`).
 - **Store:** field + default (`"once-complete"`) + setter in
-  `defaultSettings.general`, `packages/app/src/context/settings.tsx`. An existing
-  boolean `shellToolPartsExpanded` is coerced on read (`true → "no"`,
-  `false → "yes"`).
+  `defaultSettings.general`, `packages/app/src/context/settings.tsx`. The getter
+  reads the persisted setting and falls back to `"once-complete"`, so every user
+  defaults to it; the old boolean `shellToolPartsExpanded` key is now ignored.
 - **i18n:** keys in all 62 locale files —
   `settings.general.row.collapseShellTools.title/.description`, plus `.option.yes`,
   `.option.onceComplete`, `.option.no`.

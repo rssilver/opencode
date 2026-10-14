@@ -407,13 +407,7 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
           setStore("general", "showReasoningSummaries", value)
         },
         collapseShellTools: withFallback(
-          () => {
-            const legacy = (store.general as Partial<Record<string, unknown>>).shellToolPartsExpanded
-            if (typeof legacy === "boolean") return legacy ? "no" : "yes"
-            const stored = store.general?.collapseShellTools
-            if (stored === "yes" || stored === "once-complete" || stored === "no") return stored
-            return undefined
-          },
+          () => store.general?.collapseShellTools,
           defaultSettings.general.collapseShellTools,
         ),
         setCollapseShellTools(value: ThinkingCollapseMode) {
