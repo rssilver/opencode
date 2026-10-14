@@ -317,6 +317,62 @@
   }
 }
 
+[data-component="reasoning-part"][data-streaming="true"] {
+  position: sticky;
+  top: var(--thinking-panel-top, calc(var(--sticky-header-height, 0px) + 24px));
+  z-index: 15;
+}
+
+.reasoning-scroll-viewport {
+  position: relative;
+  width: 100%;
+}
+
+[data-slot="reasoning-scroll-box"],
+.reasoning-scroll-box {
+  max-height: var(--thinking-panel-max-height, min(60vh, 520px));
+  padding: 8px 14px 16px 8px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.reasoning-scrollbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  pointer-events: none;
+}
+
+.reasoning-scrollbar-track {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.reasoning-scrollbar-thumb {
+  position: absolute;
+  right: 0;
+  width: 3px;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
 [data-slot="reasoning-chevron"] {
   display: inline-flex;
   align-items: center;

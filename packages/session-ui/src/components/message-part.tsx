@@ -1793,10 +1793,64 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
   })
   const [userOpen, setUserOpen] = createSignal<boolean | undefined>(undefined)
   const open = () => userOpen() ?? defaultOpen()
+  let scrollBoxEl: HTMLDivElement | undefined
+  const setScrollBoxEl = (el: HTMLDivElement | undefined) => {
+    scrollBoxEl = el
+  }
+  let trackEl: HTMLDivElement | undefined
+  const setTrackRef = (el: HTMLDivElement | undefined) => {
+    trackEl = el
+  }
+  const [thumbStyle, setThumbStyle] = createSignal("")
+
+  const updateThumb = () => {
+    const el = scrollBoxEl
+    const track = trackEl
+    if (!el || !track) return
+    const trackH = track.clientHeight
+    const max = el.scrollHeight - el.clientHeight
+    if (max <= 0) {
+      setThumbStyle("height:100%;top:0px")
+      return
+    }
+    const thumbH = Math.max(24, (el.clientHeight / el.scrollHeight) * trackH)
+    const frac = Math.min(1, Math.max(0, el.scrollTop / max))
+    setThumbStyle(`top:${frac * (trackH - thumbH)}px;height:${thumbH}px`)
+  }
+
+  let followTimer: number | undefined
+  const stopFollow = () => {
+    if (followTimer !== undefined) {
+      window.clearTimeout(followTimer)
+      followTimer = undefined
+    }
+  }
+  const startFollow = () => {
+    stopFollow()
+    const loop = () => {
+      const el = scrollBoxEl
+      if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 24) {
+        el.scrollTop = el.scrollHeight
+      }
+      updateThumb()
+      followTimer = window.setTimeout(loop, 80)
+    }
+    followTimer = window.setTimeout(loop, 0)
+  }
+
+  createEffect(() => {
+    if (streaming()) startFollow()
+    else stopFollow()
+  })
+  onCleanup(stopFollow)
 
   return (
     <Show when={text()}>
-      <div data-component="reasoning-part" data-timeline-part-id={part().id}>
+      <div
+        data-component="reasoning-part"
+        data-timeline-part-id={part().id}
+        data-streaming={streaming() ? "true" : undefined}
+      >
         <Collapsible open={open()} onOpenChange={(value) => setUserOpen(value)} class="tool-collapsible">
           <Collapsible.Trigger>
             <div data-slot="reasoning-part-trigger" class="flex items-center gap-2">
@@ -1812,7 +1866,26 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
             </div>
           </Collapsible.Trigger>
           <Collapsible.Content>
-            <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
+            <Show when={streaming()}>
+              <div class="reasoning-scroll-viewport">
+                <div
+                  ref={setScrollBoxEl}
+                  data-slot="reasoning-scroll-box"
+                  class="reasoning-scroll-box"
+                  onScroll={updateThumb}
+                >
+                  <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
+                </div>
+                <div class="reasoning-scrollbar">
+                  <div ref={setTrackRef} class="reasoning-scrollbar-track">
+                    <div class="reasoning-scrollbar-thumb" style={thumbStyle()} />
+                  </div>
+                </div>
+              </div>
+            </Show>
+            <Show when={!streaming()}>
+              <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
+            </Show>
           </Collapsible.Content>
         </Collapsible>
       </div>
