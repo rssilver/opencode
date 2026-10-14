@@ -1802,6 +1802,7 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
     trackEl = el
   }
   const [thumbStyle, setThumbStyle] = createSignal("")
+  let pinnedToBottom = true
 
   const updateThumb = () => {
     const el = scrollBoxEl
@@ -1827,9 +1828,10 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
   }
   const startFollow = () => {
     stopFollow()
+    pinnedToBottom = true
     const loop = () => {
       const el = scrollBoxEl
-      if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 24) {
+      if (pinnedToBottom && el) {
         el.scrollTop = el.scrollHeight
       }
       updateThumb()
@@ -1872,7 +1874,12 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
                   ref={setScrollBoxEl}
                   data-slot="reasoning-scroll-box"
                   class="reasoning-scroll-box"
-                  onScroll={updateThumb}
+                  onScroll={() => {
+                    const el = scrollBoxEl
+                    if (!el) return
+                    pinnedToBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 24
+                    updateThumb()
+                  }}
                 >
                   <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
                 </div>
