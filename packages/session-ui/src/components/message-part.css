@@ -371,6 +371,12 @@
   width: 3px;
   background: #ffffff;
   border-radius: 2px;
+  pointer-events: auto;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 [data-slot="reasoning-chevron"] {

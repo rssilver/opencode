@@ -87,3 +87,28 @@ so users get the desired behavior without needing to select it.
 - `i18n parity`: 5/5. `session-ui` component tests: 65/65.
 - Desktop rebuilt with `electron-vite build` and packed to an NSIS installer at
   `packages/desktop/dist/opencode-desktop-win-x64.exe`.
+
+## 2026-10-14 — Thinking-panel scrollbar: auto-scroll fix and draggable thumb
+
+### Auto-scroll follow fix (session-ui)
+- Fixed the thinking panel no longer scrolling as text grows past its max-height. The
+  follow loop gated on `scrollHeight - scrollTop - clientHeight < 24`, so once per-tick
+  growth exceeded ~24px the gap only kept growing and follow stalled; text piled up
+  off-screen below the fold.
+- Introduced a `pinnedToBottom` flag (starts true). While streaming, every tick now
+  always re-pins to the bottom (`scrollTop = scrollHeight`) so it keeps up regardless of
+  token rate. Scroll events only flip the flag: scrolling past ~24px from the bottom
+  stops following; returning to the bottom resumes it. `message-part.tsx`.
+
+### Draggable scrollbar thumb (session-ui)
+- Added pointer-capture handlers (`onPointerDown/Move/Up`) on `.reasoning-scrollbar-thumb`
+  that map drag distance to scroll position using the thumb's travel range
+  (`trackHeight - thumbHeight`) against the full scrollable range, clamped to `[0, max]`.
+- Grabbing sets `pinnedToBottom = false` so auto-follow yields while dragging and resumes
+  when the user returns to the bottom. Same white 3px thumb / dim track visually; only
+  added `pointer-events: auto` and `grab`/`grabbing` cursor on the thumb in
+  `message-part.css`.
+
+### Verification
+- `session-ui` typecheck passes. Desktop rebuilt with `electron-vite build` and packed to
+  an NSIS installer at `packages/desktop/dist/opencode-desktop-win-x64.exe`.

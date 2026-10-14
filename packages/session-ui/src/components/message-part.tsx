@@ -1803,20 +1803,64 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
   }
   const [thumbStyle, setThumbStyle] = createSignal("")
   let pinnedToBottom = true
+  let isDragging = false
+  let dragStartY = 0
+  let dragStartScroll = 0
+  let dragTarget: HTMLElement | undefined
+
+  const thumbGeometry = () => {
+    const el = scrollBoxEl
+    const track = trackEl
+    if (!el || !track) return { top: 0, height: 0 }
+    const trackH = track.clientHeight
+    const max = el.scrollHeight - el.clientHeight
+    if (max <= 0) return { top: 0, height: trackH }
+    const thumbH = Math.max(24, (el.clientHeight / el.scrollHeight) * trackH)
+    const frac = Math.min(1, Math.max(0, el.scrollTop / max))
+    return { top: frac * (trackH - thumbH), height: thumbH }
+  }
 
   const updateThumb = () => {
+    const g = thumbGeometry()
+    setThumbStyle(`top:${g.top}px;height:${g.height}px`)
+  }
+
+  const onThumbPointerDown = (e: PointerEvent) => {
+    isDragging = true
+    dragStartY = e.clientY
+    dragStartScroll = scrollBoxEl ? scrollBoxEl.scrollTop : 0
+    pinnedToBottom = false
+    dragTarget = e.currentTarget as HTMLElement
+    try {
+      dragTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* pointer capture unsupported; dragging still tracks move/up */
+    }
+  }
+
+  const onThumbPointerMove = (e: PointerEvent) => {
+    if (!isDragging) return
     const el = scrollBoxEl
     const track = trackEl
     if (!el || !track) return
-    const trackH = track.clientHeight
     const max = el.scrollHeight - el.clientHeight
-    if (max <= 0) {
-      setThumbStyle("height:100%;top:0px")
-      return
+    if (max <= 0) return
+    const g = thumbGeometry()
+    const travel = Math.max(1, track.clientHeight - g.height)
+    const delta = e.clientY - dragStartY
+    const next = dragStartScroll + (delta / travel) * max
+    el.scrollTop = Math.min(max, Math.max(0, next))
+    updateThumb()
+  }
+
+  const onThumbPointerUp = (e: PointerEvent) => {
+    isDragging = false
+    const target = e.currentTarget as HTMLElement
+    try {
+      target.releasePointerCapture(e.pointerId)
+    } catch {
+      /* nothing to release */
     }
-    const thumbH = Math.max(24, (el.clientHeight / el.scrollHeight) * trackH)
-    const frac = Math.min(1, Math.max(0, el.scrollTop / max))
-    setThumbStyle(`top:${frac * (trackH - thumbH)}px;height:${thumbH}px`)
   }
 
   let followTimer: number | undefined
@@ -1885,7 +1929,13 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
                 </div>
                 <div class="reasoning-scrollbar">
                   <div ref={setTrackRef} class="reasoning-scrollbar-track">
-                    <div class="reasoning-scrollbar-thumb" style={thumbStyle()} />
+                    <div
+                      class="reasoning-scrollbar-thumb"
+                      style={thumbStyle()}
+                      onPointerDown={onThumbPointerDown}
+                      onPointerMove={onThumbPointerMove}
+                      onPointerUp={onThumbPointerUp}
+                    />
                   </div>
                 </div>
               </div>
