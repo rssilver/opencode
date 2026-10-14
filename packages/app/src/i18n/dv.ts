@@ -990,6 +990,11 @@
   "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
   "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
   "settings.general.row.newInterface.title": "Þ‡Þ§ ÞÞ­Þ‡Þ¦Þ‡ÞªÞ“Þ¬Þ‡Þ°",
   "settings.general.row.newInterface.badge": "Þ‡Þ§",
   "settings.general.row.newInterface.description":

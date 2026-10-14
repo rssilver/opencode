@@ -10,7 +10,8 @@ features added here.
 ### General settings enabled by default (app)
 - Flipped all general toggles to `true` in `defaultSettings.general`:
   `showFileTree`, `showNavigation`, `showSearch`, `showStatus`, `showTerminal`,
-  `showReasoningSummaries`, `shellToolPartsExpanded`, `showCustomAgents`.
+  `showReasoningSummaries`, `collapseShellTools`, `showCustomAgents`. (`shellToolPartsExpanded`
+  was later replaced by the `collapseShellTools` dropdown; see below.)
 - Kept `editToolPartsExpanded: false` at the user's request.
 
 ### Dark mode on by default (ui)
@@ -37,6 +38,31 @@ features added here.
   `MessagePartProps` (`Part`, `AssistantParts`, `AssistantMessageDisplay`,
   `Message`). The v2 timeline passes the setting in
   `packages/app/src/pages/session/timeline/message-timeline.tsx`.
+
+### Collapse shell tool parts setting (new feature)
+- Replaced the boolean `shellToolPartsExpanded` general setting with a dropdown
+  `collapseShellTools` using the same three-mode `ThinkingCollapseMode`:
+  `"yes"`, `"once-complete"` (default), `"no"`. Behavior by mode for shell/tool
+  parts:
+  - `yes` — always collapsed.
+  - `once-complete` — the part stays open only while its tool call is still
+    running/pending; it collapses as soon as that call completes or errors.
+  - `no` — always expanded.
+  - A manual expand/collapse by the user is respected and sticks: the v2
+    timeline persists the choice in its per-part `toolOpen` store, so the mode
+    only governs open state before the user first interacts with a part.
+- `partDefaultOpen` now takes a collapse mode instead of a boolean; shell/bash
+  parts return true while `state.status` is pending/running under
+  `once-complete`, false otherwise. Updated `part-default-open.test.ts`.
+- Wired through `packages/session-ui/src/components/message-part.tsx` and
+  `session-turn.tsx` (legacy path keeps the old boolean for backward-compat and
+  coerces it to a mode). The active v2 timeline reads the setting in
+  `packages/app/src/pages/session/timeline/message-timeline.tsx`.
+- Setting rendered as the same Select dropdown as thinking on both surfaces
+  (`settings-general.tsx`, `settings-v2/general.tsx`), with i18n keys for all 62
+  locales: `settings.general.row.collapseShellTools.{title,description,option.yes,option.onceComplete,option.no}`.
+- Migration in `packages/app/src/context/settings.tsx`: an existing boolean
+  `shellToolPartsExpanded` is coerced (true→"no", false→"yes").
 
 ### Collapsible arrow UX fix (session-ui)
 - The thinking-block chevron now uses a single `chevron-right` glyph for both

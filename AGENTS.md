@@ -199,6 +199,7 @@ Template:
 See [`spec.md`](./spec.md#features-added-this-session) for the full documentation of features introduced in this session:
 
 - `collapseThinkingBlocks` general setting (`yes` / `once-complete` default / `no`) with collapsible reasoning blocks, on both v1 and v2 settings surfaces.
+- `collapseShellTools` general setting replaces the boolean `shellToolPartsExpanded`; same three modes (`yes` / `once-complete` default / `no`) so shell/tool parts collapse when their call completes. On both v1 and v2 settings surfaces.
 - Dark mode enabled by default for new installs.
 - All general toggles enabled by default (except `editToolPartsExpanded`).
 - Collapsible thinking-block arrow UX fix (single glyph, size match, RTL-safe).

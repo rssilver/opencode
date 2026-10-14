@@ -300,6 +300,35 @@ const CollapseThinkingBlocksSetting = () => {
   )
 }
 
+const CollapseShellToolsSetting = () => {
+  const language = useLanguage()
+  const settings = useSettings()
+  const options = createMemo<({ value: "yes" | "once-complete" | "no"; label: string }[])>(() => [
+    { value: "yes", label: language.t("settings.general.row.collapseShellTools.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseShellTools.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseShellTools.option.no") },
+  ])
+  return (
+    <SettingsRowV2
+      title={language.t("settings.general.row.collapseShellTools.title")}
+      description={language.t("settings.general.row.collapseShellTools.description")}
+    >
+      <div data-action="settings-collapse-shell-tools">
+        <SelectV2
+          appearance="inline"
+          options={options()}
+          placement="bottom-end"
+          gutter={6}
+          current={options().find((option) => option.value === settings.general.collapseShellTools())}
+          value={(option) => option.value}
+          label={(option) => option.label}
+          onSelect={(option) => option && settings.general.setCollapseShellTools(option.value)}
+        />
+      </div>
+    </SettingsRowV2>
+  )
+}
+
 export const SettingsGeneralV2: Component<{
   sessionID?: string
 }> = (props) => {
@@ -374,17 +403,7 @@ export const SettingsGeneralV2: Component<{
           </div>
         </SettingsRowV2>
 
-        <SettingsRowV2
-          title={language.t("settings.general.row.shellToolPartsExpanded.title")}
-          description={language.t("settings.general.row.shellToolPartsExpanded.description")}
-        >
-          <div data-action="settings-feed-shell-tool-parts-expanded">
-            <Switch
-              checked={settings.general.shellToolPartsExpanded()}
-              onChange={(checked) => settings.general.setShellToolPartsExpanded(checked)}
-            />
-          </div>
-        </SettingsRowV2>
+        <CollapseShellToolsSetting />
 
         <SettingsRowV2
           title={language.t("settings.general.row.editToolPartsExpanded.title")}

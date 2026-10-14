@@ -215,6 +215,12 @@ export const SettingsGeneral: Component = () => {
     { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
   ])
 
+  const collapseShellToolsOptions = createMemo((): { value: "yes" | "once-complete" | "no"; label: string }[] => [
+    { value: "yes", label: language.t("settings.general.row.collapseShellTools.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseShellTools.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseShellTools.option.no") },
+  ])
+
   const languageOptions = createMemo(() =>
     language.locales.map((locale) => ({
       value: locale,
@@ -366,15 +372,21 @@ export const SettingsGeneral: Component = () => {
         </SettingsRow>
 
         <SettingsRow
-          title={language.t("settings.general.row.shellToolPartsExpanded.title")}
-          description={language.t("settings.general.row.shellToolPartsExpanded.description")}
+          title={language.t("settings.general.row.collapseShellTools.title")}
+          description={language.t("settings.general.row.collapseShellTools.description")}
         >
-          <div data-action="settings-feed-shell-tool-parts-expanded">
-            <Switch
-              checked={settings.general.shellToolPartsExpanded()}
-              onChange={(checked) => settings.general.setShellToolPartsExpanded(checked)}
-            />
-          </div>
+          <Select
+            data-action="settings-collapse-shell-tools"
+            options={collapseShellToolsOptions()}
+            current={collapseShellToolsOptions().find((o) => o.value === settings.general.collapseShellTools())}
+            value={(o) => o.value}
+            label={(o) => o.label}
+            onSelect={(option) => option && settings.general.setCollapseShellTools(option.value)}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+            triggerStyle={{ "min-width": "180px" }}
+          />
         </SettingsRow>
 
         <SettingsRow

@@ -67,7 +67,41 @@ New setting with three modes: `"yes"`, `"once-complete"` (default), `"no"`.
   `packages/session-ui/src/components/message-part.tsx`.
 - **i18n:** keys in all 62 locale files —
   `settings.general.row.collapseThinkingBlocks.title/.description`, plus
-  `.option.yes`, `.option.onceComplete`, `.option.no` (English placeholders).
+   `.option.yes`, `.option.onceComplete`, `.option.no` (English placeholders).
+
+### `collapseShellTools` general setting
+
+Replaces the boolean `shellToolPartsExpanded`. Same three modes: `"yes"`,
+`"once-complete"` (default), `"no"`, backed by the same `ThinkingCollapseMode`
+type.
+
+- **UI:** a dropdown in **General settings** on both surfaces, mirroring the
+  thinking setting (`settings-general.tsx`; `CollapseShellToolsSetting` in
+  `packages/app/src/components/settings-v2/general.tsx`).
+- **Store:** field + default (`"once-complete"`) + setter in
+  `defaultSettings.general`, `packages/app/src/context/settings.tsx`. An existing
+  boolean `shellToolPartsExpanded` is coerced on read (`true → "no"`,
+  `false → "yes"`).
+- **i18n:** keys in all 62 locale files —
+  `settings.general.row.collapseShellTools.title/.description`, plus `.option.yes`,
+  `.option.onceComplete`, `.option.no`.
+
+Behavior by mode for shell/tool parts:
+
+- `yes`: always collapsed.
+- `once-complete`: the part stays open only while its tool call is still
+  running/pending; it collapses as soon as that call completes or errors.
+- `no`: always expanded.
+- A manual expand/collapse is respected and sticks — the v2 timeline persists the
+  choice in its per-part `toolOpen` store, so the mode governs open state only
+  before the user first interacts with a part.
+
+Wiring: `partDefaultOpen` (`packages/session-ui/src/components/part-default-open.ts`)
+now takes a collapse mode instead of a boolean; shell/bash parts return true while
+`state.status` is pending/running under `once-complete`. The active v2 timeline
+reads `settings.general.collapseShellTools` in
+`packages/app/src/pages/session/timeline/message-timeline.tsx`, where the reactive
+default feeds the controlled tool-open state.
 
 ### Collapsible reasoning blocks
 
@@ -104,8 +138,9 @@ off-center / too big.
   changed from `"system"` to `"dark"` in `packages/ui/src/theme/context.tsx`.
 - **General toggles enabled by default:** `showFileTree`, `showNavigation`,
   `showSearch`, `showStatus`, `showTerminal`, `showReasoningSummaries`,
-  `shellToolPartsExpanded`, `showCustomAgents` set to `true` in
-  `defaultSettings.general`; `editToolPartsExpanded` left `false`.
+  `collapseShellTools`, `showCustomAgents` set to `true` in
+  `defaultSettings.general`; `editToolPartsExpanded` left `false`. (`collapseShellTools`
+  defaults to `"once-complete"` rather than a boolean.)
 
 ## Verification
 

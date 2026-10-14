@@ -734,6 +734,7 @@ export function AssistantParts(props: {
   working?: boolean
   showReasoningSummaries?: boolean
   shellToolDefaultOpen?: boolean
+  shellToolCollapseMode?: Accessor<ThinkingCollapseMode>
   editToolDefaultOpen?: boolean
   thinkingCollapseMode?: Accessor<ThinkingCollapseMode>
 }) {
@@ -817,7 +818,11 @@ export function AssistantParts(props: {
                         showAssistantCopyPartID={props.showAssistantCopyPartID}
                         turnDurationMs={props.turnDurationMs}
                         useV2Actions={props.useV2Actions}
-                        defaultOpen={partDefaultOpen(item()!, props.shellToolDefaultOpen, props.editToolDefaultOpen)}
+                        defaultOpen={partDefaultOpen(
+                          item()!,
+                          props.shellToolCollapseMode?.() ?? (props.shellToolDefaultOpen ? "no" : "yes"),
+                          props.editToolDefaultOpen,
+                        )}
                         thinkingCollapseMode={props.thinkingCollapseMode}
                       />
                     </Show>

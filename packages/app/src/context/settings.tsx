@@ -31,7 +31,7 @@ export interface Settings {
     showStatus: boolean
     showTerminal: boolean
     showReasoningSummaries: boolean
-    shellToolPartsExpanded: boolean
+    collapseShellTools: ThinkingCollapseMode
     editToolPartsExpanded: boolean
     collapseThinkingBlocks: ThinkingCollapseMode
     showCustomAgents: boolean
@@ -193,7 +193,7 @@ const defaultSettings: Settings = {
     showStatus: true,
     showTerminal: true,
     showReasoningSummaries: true,
-    shellToolPartsExpanded: true,
+    collapseShellTools: "once-complete",
     editToolPartsExpanded: false,
     collapseThinkingBlocks: "once-complete",
     showCustomAgents: true,
@@ -406,12 +406,18 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setShowReasoningSummaries(value: boolean) {
           setStore("general", "showReasoningSummaries", value)
         },
-        shellToolPartsExpanded: withFallback(
-          () => store.general?.shellToolPartsExpanded,
-          defaultSettings.general.shellToolPartsExpanded,
+        collapseShellTools: withFallback(
+          () => {
+            const legacy = (store.general as Partial<Record<string, unknown>>).shellToolPartsExpanded
+            if (typeof legacy === "boolean") return legacy ? "no" : "yes"
+            const stored = store.general?.collapseShellTools
+            if (stored === "yes" || stored === "once-complete" || stored === "no") return stored
+            return undefined
+          },
+          defaultSettings.general.collapseShellTools,
         ),
-        setShellToolPartsExpanded(value: boolean) {
-          setStore("general", "shellToolPartsExpanded", value)
+        setCollapseShellTools(value: ThinkingCollapseMode) {
+          setStore("general", "collapseShellTools", value)
         },
         editToolPartsExpanded: withFallback(
           () => store.general?.editToolPartsExpanded,
