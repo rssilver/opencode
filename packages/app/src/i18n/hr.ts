@@ -990,6 +990,8 @@ export const dict = {
   "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
   "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description": "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "Novi izgled",
   "settings.general.row.newInterface.badge": "Novi",
   "settings.general.row.newInterface.description":

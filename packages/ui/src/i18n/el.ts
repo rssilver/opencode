@@ -60,6 +60,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Εμφάνιση όλων",
   "ui.sessionTurn.diffs.showLess": "Εμφάνιση λιγότερων",
   "ui.sessionTurn.diffs.more": "+{{count}} ακόμη αρχεία",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "επαναπροσπαθώ",
   "ui.sessionTurn.retry.inSeconds": "σε {{seconds}}s",
   "ui.sessionTurn.retry.attempt": "προσπάθεια #{{attempt}}",

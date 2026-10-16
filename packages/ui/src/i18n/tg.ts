@@ -60,6 +60,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "Ҳама нишон диҳед",
   "ui.sessionTurn.diffs.showLess": "Камтар нишон диҳед",
   "ui.sessionTurn.diffs.more": "+{{count}} файлҳои бештар",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "дубора кӯшиш кардан",
   "ui.sessionTurn.retry.inSeconds": "дар {{seconds}}с",
   "ui.sessionTurn.retry.attempt": "кӯшиш #{{attempt}}",

@@ -112,3 +112,75 @@ so users get the desired behavior without needing to select it.
 ### Verification
 - `session-ui` typecheck passes. Desktop rebuilt with `electron-vite build` and packed to
   an NSIS installer at `packages/desktop/dist/opencode-desktop-win-x64.exe`.
+
+### Global collapse alignment and boundary fix (app)
+- Fixed two bugs in the "Worked for X" supersection collapse (`collapseWorkingSections`,
+  `packages/app/src/pages/session/timeline/working-sections.ts` + `message-timeline.tsx`).
+- **Alignment** — the section trigger rendered flush-left at full viewport width while the
+  actual message text sits in a centered, padded column, so "Worked for" appeared far to the
+  left of its content. `WorkingSectionSummary` now applies the same framing as other rows:
+  `min-w-0 w-full max-w-full`, `md:max-w-200 2xl:max-w-[1000px]` + `md:mx-auto` when centered,
+  and an inner `w-full px-4 md:px-5` wrapper so the label aligns with message columns.
+  `centered` is threaded from `MessageTimeline` through `VirtualTimelineRow`.
+- **User messages never collapse** — boundaries (user messages) are now always rendered inline
+  and split the timeline into turn groups; they are never folded into a collapsed section. The
+  algorithm treats both visible responses and boundary rows as inline anchors that flush the
+  pending working section before rendering. Section duration is summed over *distinct* turn
+  `userMessageID`s (deduped) so repeated tool/thinking rows in one turn don't multiply the total.
+- Updated `working-sections.test.ts` to assert user messages stay visible as boundaries and the
+  collapsed response folds into a section between them; duration counts only distinct turns.
+- Verification: `bun run typecheck` OK; timeline suite 36/36 (`working-sections.test.ts` 5/5);
+  `oxlint` on changed files 0 warnings / 0 errors (remaining warnings are pre-existing in the
+  large `message-timeline.tsx`). Desktop rebuilt and packed to
+  `packages/desktop/dist/opencode-desktop-win-x64.exe`.
+
+### 2026-10-16 — Global collapse: ghost sections, toggle persistence, arrow placement
+
+### Ghost section above every user message (app)
+- The "Worked for X" trigger was appearing above every user message with nothing inside it.
+  Root cause: `TurnGap` spacer rows (inserted before each turn by the projection,
+  `rows.ts`) were being folded into collapsed sections and rendered as empty groups.
+- `buildDisplayRows` in `working-sections.ts` now filters out `TurnGap` rows up front, so spacers
+  can never become phantom sections or shift section keys/content.
+
+### Expand/collapse made persistent (app)
+- Previously a collapsed summary was the only row emitted for its group; expanding replaced it with
+  child rows and left no way to collapse back ("disappear and never come back"). `WorkingSectionSummary`
+  is now always emitted as the disclosure header, and expanded sections additionally reveal their
+  child rows inline after it. The toggle therefore stays in the timeline in both states.
+- `buildDisplayRows`/`flushRun` now always push the summary row and only append child rows when
+  `isExpanded(key)` is true.
+
+### Arrow moved to the right of the label (app)
+- The disclosure chevron was on the left of the "Worked for" text. It now sits to the right via a
+  `justify-between` button layout, rotating from a right-pointing arrow (collapsed) to down (expanded).
+- Rotation is applied as an inline `transform` style computed at render time (`document.documentElement.dir`)
+  rather than a stylesheet rule, so it can flip direction for RTL without relying on cascade order. The old
+  scoped stylesheet `message-timeline-working-sections.css` was removed once the import dropped out.
+
+### Section durations are distinct per assistant message (app)
+- Previously every collapsed section in a turn reported the whole turn's duration (`turnDurationMs`), so
+  consecutive "Worked for X" labels were identical ("linked times"). `buildSummary` now sums a per-row
+  contribution keyed by assistant message instead of deduping by user-message id, and `message-timeline.tsx`
+  supplies that via `partMessageDurationMs`, which resolves each `AssistantPart` to its own assistant message
+  (`time.created`/`time.completed`) and contributes only that response's span. Distinct responses therefore
+  yield distinct totals; repeated parts of one message are counted once.
+
+### Active-turn rows stay visible (app)
+- While a turn is still running, its thinking/shell/explore work should not collapse into a group until it
+  finishes. `buildDisplayRows` gained an `isActive` predicate and now treats active-turn rows as inline
+  anchors (flush + render), matching how boundaries/visible responses behave; once the turn completes they
+  fold normally. `message-timeline.tsx` passes `isActive: row => workingTurn(row.userMessageID)`.
+
+### Padding above worked-on sections (app)
+- The summary header sat flush against the content above it. Added `pt-3` to the outer wrapper, matching the
+  sibling collapsible header (`previousAssistantPart`) spacing.
+
+### Verification
+- `working-sections.test.ts`: 8/8 pass, including new tests asserting active-turn rows never fold and that
+  section durations sum per assistant message instead of repeating the turn total (plus the earlier TurnGap
+  no-ghost and expand-persistence cases).
+- Full timeline suite: 39/39 (`packages/app/src/pages/session/timeline/`).
+- `bun run typecheck` OK; `oxlint` on changed files 0 errors (25 pre-existing warnings in the large
+  `message-timeline.tsx`). Desktop rebuilt and packed to
+  `packages/desktop/dist/opencode-desktop-win-x64.exe`.

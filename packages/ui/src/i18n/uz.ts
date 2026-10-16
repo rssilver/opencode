@@ -62,6 +62,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Hammasini ko'rsatish",
   "ui.sessionTurn.diffs.showLess": "Kamroq ko'rsatish",
   "ui.sessionTurn.diffs.more": "+{{count}} ko'proq fayllar",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "qayta urinish",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}}larda",
   "ui.sessionTurn.retry.attempt": "#{{attempt}} harakat qiling",

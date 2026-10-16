@@ -140,7 +140,34 @@ off-center / too big.
   `showSearch`, `showStatus`, `showTerminal`, `showReasoningSummaries`,
   `collapseShellTools`, `showCustomAgents` set to `true` in
   `defaultSettings.general`; `editToolPartsExpanded` left `false`. (`collapseShellTools`
-  defaults to `"once-complete"` rather than a boolean.)
+   defaults to `"once-complete"` rather than a boolean.)
+
+### `collapseWorkingSections` — "Worked for X" supersection (app)
+
+Collapses everything between/around visible responses into collapsible groups so only the most
+recent responses stay open. Driven by `buildDisplayRows` in
+`packages/app/src/pages/session/timeline/working-sections.ts`.
+
+- **Visible window:** keeps the last `RESPONSE_WINDOW` (= 2) non-thinking responses visible; older
+  work folds into collapsible sections between them. Short sessions (fewer than two responses) stay
+  fully visible.
+- **No ghost sections:** `TurnGap` spacer rows (inserted before each turn by the projection,
+  `rows.ts`) are filtered out up front so spacers can never become empty groups or shift section
+  keys/content.
+- **Persistent toggle:** the summary header is always emitted as a row; expanded sections additionally
+  reveal their child rows inline after it (`flushRun`), so expand/collapse never disappears.
+- **Distinct durations:** each section sums a per-row contribution keyed by assistant message instead
+  of deduping by user-message id, so consecutive "Worked for X" labels differ. `message-timeline.tsx`
+  supplies the resolver via `partMessageDurationMs`, which maps each `AssistantPart` to its own
+  assistant message (`time.created`/`time.completed`) and contributes only that response's span;
+  repeated parts of one message count once, and pure-thinking sections show the generic label.
+- **Active-turn rows stay visible:** an `isActive` predicate treats rows from a still-running turn as
+  inline anchors (flush + render) so running thinking/shell/explore work never collapses until the
+  turn finishes; it folds normally afterward (`message-timeline.tsx` passes
+  `isActive: row => workingTurn(row.userMessageID)`).
+- **Label:** compact duration via `formatCompactDuration` in `packages/app/src/utils/time.ts`.
+- **Placement/UX:** disclosure chevron sits to the right of the label (inline `transform`, RTL-aware
+  via `document.documentElement.dir`); the outer wrapper uses `pt-3` for top spacing.
 
 ## Verification
 

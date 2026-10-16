@@ -61,6 +61,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "បង្ហាញទាំងអស់។",
   "ui.sessionTurn.diffs.showLess": "បង្ហាញតិច",
   "ui.sessionTurn.diffs.more": "+{{count}} ឯកសារច្រើនទៀត",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "កំពុងព្យាយាមម្តងទៀត",
   "ui.sessionTurn.retry.inSeconds": "នៅក្នុង {{seconds}}s",
   "ui.sessionTurn.retry.attempt": "ព្យាយាម #{{attempt}}",

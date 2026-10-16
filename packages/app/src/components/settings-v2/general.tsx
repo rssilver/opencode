@@ -329,6 +329,24 @@ const CollapseShellToolsSetting = () => {
   )
 }
 
+const CollapseWorkingSectionsSetting = () => {
+  const language = useLanguage()
+  const settings = useSettings()
+  return (
+    <SettingsRowV2
+      title={language.t("settings.general.row.collapseWorkingSections.title")}
+      description={language.t("settings.general.row.collapseWorkingSections.description")}
+    >
+      <div data-action="settings-collapse-working-sections">
+        <Switch
+          checked={settings.general.collapseWorkingSections()}
+          onChange={(checked) => settings.general.setCollapseWorkingSections(checked)}
+        />
+      </div>
+    </SettingsRowV2>
+  )
+}
+
 export const SettingsGeneralV2: Component<{
   sessionID?: string
 }> = (props) => {
@@ -418,6 +436,8 @@ export const SettingsGeneralV2: Component<{
         </SettingsRowV2>
 
         <CollapseThinkingBlocksSetting />
+
+        <CollapseWorkingSectionsSetting />
 
         <Show when={mobile() && import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"}>
           <SettingsRowV2

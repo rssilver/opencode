@@ -956,6 +956,8 @@
   "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
   "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
   "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description": "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "áŠ á‹²áˆµ áŠ á‰€áˆ›áˆ˜áŒ¥",
   "settings.general.row.newInterface.badge": "áŠ á‹²áˆµ",
   "settings.general.row.newInterface.description": "áŠ á‹²áˆ±áŠ• á‰µáˆ®á‰½ áŠ¥áŠ“ á‹¨á‰¤á‰µ áŠ á‰€áˆ›áˆ˜áŒ¥ á‹­áŒ á‰€áˆ™á¢ áˆˆá‰°á‹ˆáˆ°áŠ áŒŠá‹œ á‰ áŠ á‰€áˆ›áˆ˜áŒ¦á‰½ áˆ˜áŠ«áŠ¨áˆ á‹­á‰€á‹«á‹­áˆ©á¢",

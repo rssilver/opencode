@@ -34,6 +34,7 @@ export interface Settings {
     collapseShellTools: ThinkingCollapseMode
     editToolPartsExpanded: boolean
     collapseThinkingBlocks: ThinkingCollapseMode
+    collapseWorkingSections: boolean
     showCustomAgents: boolean
     mobileTitlebarPosition: "top" | "bottom"
     newLayoutDesigns?: boolean
@@ -196,6 +197,7 @@ const defaultSettings: Settings = {
     collapseShellTools: "once-complete",
     editToolPartsExpanded: false,
     collapseThinkingBlocks: "once-complete",
+    collapseWorkingSections: true,
     showCustomAgents: true,
     mobileTitlebarPosition: "top",
   },
@@ -426,6 +428,13 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         ),
         setCollapseThinkingBlocks(value: ThinkingCollapseMode) {
           setStore("general", "collapseThinkingBlocks", value)
+        },
+        collapseWorkingSections: withFallback(
+          () => store.general?.collapseWorkingSections,
+          defaultSettings.general.collapseWorkingSections,
+        ),
+        setCollapseWorkingSections(value: boolean) {
+          setStore("general", "collapseWorkingSections", value)
         },
         showCustomAgents,
         setShowCustomAgents(value: boolean) {

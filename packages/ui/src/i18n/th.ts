@@ -62,6 +62,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "แสดงทั้งหมด",
   "ui.sessionTurn.diffs.showLess": "แสดงน้อยลง",
   "ui.sessionTurn.diffs.more": "+{{count}} ไฟล์เพิ่มเติม",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "กำลังลองใหม่",
   "ui.sessionTurn.retry.inSeconds": "ใน {{seconds}} วินาที",

@@ -363,16 +363,28 @@ export const SettingsGeneral: Component = () => {
           title={language.t("settings.general.row.reasoningSummaries.title")}
           description={language.t("settings.general.row.reasoningSummaries.description")}
         >
-          <div data-action="settings-feed-reasoning-summaries">
-            <Switch
-              checked={settings.general.showReasoningSummaries()}
-              onChange={(checked) => settings.general.setShowReasoningSummaries(checked)}
-            />
-          </div>
-        </SettingsRow>
+           <div data-action="settings-feed-reasoning-summaries">
+             <Switch
+               checked={settings.general.showReasoningSummaries()}
+               onChange={(checked) => settings.general.setShowReasoningSummaries(checked)}
+             />
+           </div>
+         </SettingsRow>
 
-        <SettingsRow
-          title={language.t("settings.general.row.collapseShellTools.title")}
+         <SettingsRow
+           title={language.t("settings.general.row.collapseWorkingSections.title")}
+           description={language.t("settings.general.row.collapseWorkingSections.description")}
+         >
+           <div data-action="settings-collapse-working-sections">
+             <Switch
+               checked={settings.general.collapseWorkingSections()}
+               onChange={(checked) => settings.general.setCollapseWorkingSections(checked)}
+             />
+           </div>
+         </SettingsRow>
+
+         <SettingsRow
+           title={language.t("settings.general.row.collapseShellTools.title")}
           description={language.t("settings.general.row.collapseShellTools.description")}
         >
           <Select

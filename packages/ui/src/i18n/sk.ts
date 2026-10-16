@@ -62,6 +62,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Zobraziť všetko",
   "ui.sessionTurn.diffs.showLess": "Zobraziť menej",
   "ui.sessionTurn.diffs.more": "+{{count}} ďalších súborov",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "opakuje sa",
   "ui.sessionTurn.retry.inSeconds": "za {{seconds}} s",
   "ui.sessionTurn.retry.attempt": "pokus č. {{attempt}}",

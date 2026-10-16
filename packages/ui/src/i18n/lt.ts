@@ -62,6 +62,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Rodyti viską",
   "ui.sessionTurn.diffs.showLess": "Rodyti mažiau",
   "ui.sessionTurn.diffs.more": "+{{count}} daugiau failų",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "bandant iš naujo",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}}s",
   "ui.sessionTurn.retry.attempt": "bandymas #{{attempt}}",

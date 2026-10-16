@@ -67,6 +67,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "Prikaži sve",
   "ui.sessionTurn.diffs.showLess": "Prikaži manje",
   "ui.sessionTurn.diffs.more": "+ još {{count}}",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "ponovni pokušaj u toku",
   "ui.sessionTurn.retry.inSeconds": "za {{seconds}}s",

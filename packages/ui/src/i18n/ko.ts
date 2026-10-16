@@ -215,4 +215,6 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "모두 표시",
   "ui.sessionTurn.diffs.showLess": "간략히 표시",
   "ui.sessionTurn.diffs.more": "+{{count}}개 더 보기",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 }

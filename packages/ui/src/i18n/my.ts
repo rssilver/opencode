@@ -61,6 +61,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "အားလုံးကို ပြပါ။",
   "ui.sessionTurn.diffs.showLess": "လျှော့ပြပါ။",
   "ui.sessionTurn.diffs.more": "+{{count}} နောက်ထပ်ဖိုင်များ",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "ထပ်မံကြိုးစားနေသည်",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}} စက္ကန့်အတွင်း",
   "ui.sessionTurn.retry.attempt": "#{{attempt}} ကြိုးစားပါ။",

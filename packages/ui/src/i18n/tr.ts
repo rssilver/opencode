@@ -68,6 +68,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "Tümünü göster",
   "ui.sessionTurn.diffs.showLess": "Daha az göster",
   "ui.sessionTurn.diffs.more": "+{{count}} dosya daha",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "yeniden deneniyor",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}} sn içinde",

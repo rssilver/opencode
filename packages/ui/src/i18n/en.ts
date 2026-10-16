@@ -65,6 +65,9 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showLess": "Show less",
   "ui.sessionTurn.diffs.more": "+{{count}} more files",
 
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+
   "ui.sessionTurn.retry.retrying": "retrying",
   "ui.sessionTurn.retry.inSeconds": "in {{seconds}}s",
   "ui.sessionTurn.retry.attempt": "attempt #{{attempt}}",
