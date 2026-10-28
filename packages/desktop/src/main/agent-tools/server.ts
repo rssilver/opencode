@@ -8,13 +8,14 @@ import { write as writeLog } from "../logging"
 import { browserSignInTool } from "./browser-sign-in"
 import { browserTools } from "./browser-tools"
 import { previewTools, stopAllPreviews } from "./preview-tools"
+import { videoTools } from "./video-tools"
 import { runTool, type Tool } from "./tool"
 
 const MAX_BODY = 1024 * 1024
 
 export type AgentToolsServer = { url: string; token: string; stop: () => Promise<void> }
 
-const tools: Tool[] = [...browserTools, browserSignInTool, ...previewTools]
+const tools: Tool[] = [...browserTools, browserSignInTool, ...videoTools, ...previewTools]
 
 /**
  * Starts the local MCP server that exposes the desktop app's browser panel and dev-server

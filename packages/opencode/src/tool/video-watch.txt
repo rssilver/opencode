@@ -1,0 +1,9 @@
+Watch a video file: get its chapters, a timestamped transcript, and key frames as images.
+
+Usage:
+- source is a video file path (absolute or relative to the project directory) or an http(s) URL of a direct media file (.mp4, .webm, ...). For YouTube or other video web pages, open them in the browser panel and use the browser video tool instead.
+- Frames are chosen at scene changes, at moments the narration points at the screen ("as you can see", "click here"), and evenly spaced to fill the rest. They are downscaled to 768px wide. maxFrames caps them (default 12, max 24).
+- The transcript comes from embedded text subtitles, a .vtt/.srt file next to the video, or a local Whisper (whisper.cpp) transcription when no subtitles exist. If none is available you only get frames, and the output says so.
+- To look closer at part of the video, call again with start and end (seconds or "m:ss") around the moment you care about; the same maxFrames then covers a shorter range, so frames are denser.
+- If the current model cannot view images and a vision model is configured (vision.model in opencode.json), the frames are described by that model instead. Use question to say what you want to know.
+- Requires ffmpeg and ffprobe on PATH.

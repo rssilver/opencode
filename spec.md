@@ -296,6 +296,45 @@ The model can answer with a live HTML/CSS/JS visual (simulation, graph, diagram,
   "Ask to fix" sends them to the model.
 - Not yet: open in side panel, "Edit", a "Saved visuals" menu, automatic error reports without a click, screenshots
   for the model, live theme switching without Reload.
+### `video_watch` tool and `browser_video_watch` (watching videos)
+
+**Local files / direct media URLs** — builtin tool `video_watch` (`packages/opencode/src/tool/video-watch.ts`,
+description in `video-watch.txt`, registered after `view_images` in `registry.ts`). Parameters: `source` (path or
+http(s) URL of a media file), `question`, `start` / `end` (seconds or `m:ss` / `h:mm:ss`), `maxFrames`
+(default 12, max 24). It runs `ffprobe` for duration, size, chapters and subtitle streams, then:
+
+- **Transcript:** first text subtitle stream (English preferred) via `ffmpeg -f webvtt`, else a `.vtt`/`.srt`
+  sidecar with the same name, else local Whisper on the requested range (16 kHz mono WAV, `whisper-cli -l auto
+  -ovtt`). Missing Whisper degrades to frames only with a note. Cues are chunked into ~30 s timestamped lines,
+  dropping rolling-caption repeats; capped at 40k chars.
+- **Frames:** scene changes (`scale=320:-2,select='gt(scene,0.3)',showinfo` on the range), the opening shot,
+  and narration cues that point at the screen ("as you can see", "click here", ...), merged within a minimum
+  gap, downsampled when there are too many, and filled with evenly spaced times. Each is a JPEG scaled to
+  at most 768 px wide. A follow-up call with `start`/`end` gives denser frames for that range.
+- **Delivery:** same as `view_images` (`deliveryMode` + the shared `describeImages` helper extracted from
+  `view-images.ts`): attached for image-capable models, described by `vision.model` otherwise.
+- ffmpeg/ffprobe are found on PATH; Whisper is found via `OPENCODE_WHISPER_CLI` / `OPENCODE_WHISPER_MODEL`,
+  then `whisper-cli` on PATH, then `OPENCODE_WHISPER_HOME` (default `%LOCALAPPDATA%\opencode\whisper`, or
+  `~/.local/share/opencode/whisper`) at `cuda/Release/whisper-cli(.exe)` then `cpu/Release/...`, with the first
+  `models/ggml-*.bin`.
+
+**Installed on this machine (2026-10-28):** whisper.cpp build `b5454` from the official ggml-org GitHub release
+(`whisper-bin-win-cuda-12.4.0-x64.zip` → `%LOCALAPPDATA%\opencode\whisper\cuda\Release\`, and the CPU build
+`whisper-bin-x64.zip` → `...\whisper\cpu\Release\` as fallback), plus the model
+`ggml-large-v3-turbo-q5_0.bin` (574 MB) from huggingface `ggerganov/whisper.cpp` →
+`%LOCALAPPDATA%\opencode\whisper\models\`. Chosen over faster-whisper because the machine has Python 3.14 (no
+reliable CTranslate2 wheels yet) and an RTX 5090; the CUDA build ships its own CUDA runtime DLLs. The
+downloaded zips are kept in `...\whisper\dl\` and can be deleted.
+
+**Browser videos** — desktop agent tool `browser_video_watch` (`packages/desktop/src/main/agent-tools/video-tools.ts`,
+page scripts and pure helpers in `video-script.ts`, registered in `server.ts` beside the browser tools). For the
+largest `<video>` in a panel tab it reads: the page's text tracks (`video.textTracks`, set to `hidden` to load
+cues), else YouTube's transcript panel (opened via "Show transcript" when present), else the YouTube caption URL
+from the player-response script fetched as VTT through the tab's session. Chapters come from timestamped lines
+in the description (only when the list starts at 0:00). Frames: chapter starts plus evenly spaced times (default
+8, max 16); for each it pauses, seeks, waits for `seeked`, and captures the player rect with
+`webContents.capturePage`, scaled to 768 px JPEG. The original position and play state are restored. Returns
+text + images like `browser_screenshot`. `requireTab`, `runInPage` and `sleep` in `browser-tools.ts` are now exported.
 
 ## Verification
 
