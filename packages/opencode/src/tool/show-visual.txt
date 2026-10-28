@@ -1,0 +1,18 @@
+Show the user a live, interactive visual inside the chat: a self-contained HTML page (HTML, CSS and JavaScript) rendered in a sandboxed frame below your message.
+
+Use it when playing with something beats reading about it:
+- DO use it for simulations (e.g. a predator/prey model with sliders), function graphs with the answer marked, diagrams, timelines, small calculators (loans, units, budgets), interactive explanations and data charts.
+- DO use it when the user asks you to visualize, plot, graph, simulate or "show" something.
+- DO use it to render an HTML snippet you wrote in a code block when the user wants to see it running.
+- DO NOT use it for plain answers, explanations that read fine as text, or simple lists and tables.
+- DO NOT use it when the user asked for files in their project (write those with the file tools instead); this tool does not touch the project.
+
+Rules for `html`:
+- Self-contained: inline <style> and <script>. Canvas, SVG and plain DOM all work.
+- No network access except <script>/<link> from cdn.jsdelivr.net, cdnjs.cloudflare.com or unpkg.com (e.g. Chart.js, D3, Plotly, KaTeX, three.js). fetch/XHR, other hosts, forms, popups and storage (localStorage, cookies) are blocked.
+- Match the app theme with these CSS variables, which are always defined: --background, --surface, --text, --text-weak, --border, --accent, --success, --warning, --danger, --font-sans, --font-mono. The page background should stay transparent or use var(--background).
+- Keep it compact (it renders about chat width, 600-900px wide); height adapts to the content up to a limit and the user can resize or open it full screen.
+- Label controls and axes clearly. Keep the total under about 400 KB.
+- Uncaught errors in the page are shown on the card; if the user reports one, fix it and call the tool again.
+
+After calling it, say in one or two sentences what the visual shows and how to use it; do not repeat its contents as text.

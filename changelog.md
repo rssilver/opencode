@@ -476,3 +476,25 @@ per-turn final-answer grouping from them is included here.
 - Follow-up: guide line now continuous (overshoots each row, trimmed by the virtual row's `overflow: clip`),
   and Explored (`context-tool-group-title`) and Edit/Write/Patch (`message-part-title*`) titles join the
   13px regular style. Checked on a mock with clipped, spaced virtual rows in the dev preview.
+
+## 2026-10-28 — Interactive visuals in the chat (`show_visual`)
+
+- **opencode** — New display-only tool `show_visual({ title, html })` (`src/tool/show-visual.ts`, `.txt`), registered
+  in `src/tool/registry.ts` for the `app`/`desktop` clients (same gate as `wrap_up`; default `*: allow` permission, so
+  no `agent.ts` change). The description says when to use it (simulations, graphs, diagrams, calculators) and when not
+  (plain answers, files in the project). `html` is capped at 400 KB. Each call keeps a copy at
+  `<data>/visuals/<project id>/<title-slug>-<call id>.html`; the path is in the tool metadata and output.
+- **session-ui** — `VisualCard` (`src/components/visual-card.tsx`, styles in `message-part.css`), rendered from
+  `message-part.tsx` for completed `show_visual` parts. Sandboxed iframe (`sandbox="allow-scripts"`, no same-origin,
+  `srcdoc`) with an injected CSP: scripts/styles/fonts/images only from cdn.jsdelivr.net, cdnjs.cloudflare.com and
+  unpkg.com, `connect-src 'none'`. App theme passed in as CSS variables (`--background`, `--text`, `--accent`, …).
+  Auto height via postMessage (120–640px) and a vertical resize handle. Actions: Full screen, Reload, Source, Save
+  (downloads the `.html`). Uncaught errors, unhandled rejections and CSP blocks are posted to the card and listed;
+  "Ask to fix" sends them back to the model as the next prompt.
+- **app** — `message-timeline.tsx`: completed visuals are pinned like the wrap-up card, so they do not fold into
+  "Worked for".
+- **i18n** — `ui.visual.*` keys in `packages/ui/src/i18n/en.ts` (other locales fall back).
+- Verification: `bun typecheck` clean in `packages/opencode`, `packages/session-ui`, `packages/app`;
+  `test/tool/show-visual.test.ts` 3 pass. Sandbox document checked in a browser harness: Chart.js loaded from
+  jsdelivr, `fetch` to another host blocked and reported, uncaught error reported, height messages received. Not
+  checked end to end with a live model in the app.

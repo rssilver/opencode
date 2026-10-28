@@ -58,6 +58,7 @@ import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import { Spinner } from "@opencode-ai/ui/spinner"
+import { VisualCard } from "./visual-card"
 import { TextShimmer } from "@opencode-ai/ui/text-shimmer"
 import { AnimatedCountList } from "./tool-count-summary"
 import { ToolStatusTitle } from "./tool-status-title"
@@ -1594,6 +1595,14 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
           <WrapUpCard part={part()} />
         </div>
       </Show>
+    )
+  }
+
+  if (part().tool === "show_visual" && part().state.status === "completed") {
+    return (
+      <div data-component="tool-part-wrapper" data-timeline-part-id={part().id}>
+        <VisualCard part={part()} />
+      </div>
     )
   }
 
