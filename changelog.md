@@ -616,3 +616,14 @@ per-turn final-answer grouping from them is included here.
   library (`5fb9f6659e`). Installer: `packages/desktop/dist/opencode-desktop-win-x64.exe` (186 MB, 14:15).
 - **docs** — `todo.md` #19: prompt tags such as `#visual` that force a tool or mode for one turn, with `#`
   autocomplete in the prompt bar and user-defined tags in config.
+
+### 2026-10-28 — Fix: visual cards never rendered (showed as "Called `show_visual`")
+
+- **session-ui** — `packages/session-ui/src/components/message-part.tsx`: the `show_visual` card was chosen by a
+  one-time check when the tool part mounted. The part mounts while the call is still running, so it stayed on the
+  generic "Called `show_visual`" row after completing; because completed visuals are pinned outside "Worked for",
+  that raw row showed outside the fold. The check is now a reactive `<Match>` in the tool part's `Switch`, so the
+  card replaces the row when the call completes. Errored visual calls still show the error card (and fold).
+- Verification: opened the user's session `ses_e7c452b88ffeaaLiyMdEHPWL9z` in the app dev server; all three visual
+  calls (including one that reused the saved `quadratic-plotter` template) render as cards with the plot drawn, no
+  raw tool rows. `bun typecheck` clean in session-ui and app.

@@ -1598,14 +1598,6 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
     )
   }
 
-  if (part().tool === "show_visual" && part().state.status === "completed") {
-    return (
-      <div data-component="tool-part-wrapper" data-timeline-part-id={part().id}>
-        <VisualCard part={part()} />
-      </div>
-    )
-  }
-
   const hideQuestion = createMemo(
     () => part().tool === "question" && (part().state.status === "pending" || part().state.status === "running"),
   )
@@ -1675,6 +1667,10 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
                 />
               )
             }}
+          </Match>
+          {/* Checked reactively: the part first mounts while running, then completes in place. */}
+          <Match when={part().tool === "show_visual" && part().state.status === "completed"}>
+            <VisualCard part={part()} />
           </Match>
           <Match when={true}>
             <Dynamic
