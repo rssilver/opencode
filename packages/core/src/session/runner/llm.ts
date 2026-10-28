@@ -90,6 +90,13 @@ import { llmClient } from "../../effect/app-node-platform"
  * explicit loop starts the next provider turn after local settlement. Configured agent step limits bound the loop.
  */
 
+// Time-to-first-token ends at the first event that carries model output rather than provider bookkeeping.
+const isFirstTokenEvent = (event: LLMEvent) =>
+  LLMEvent.is.textDelta(event) ||
+  LLMEvent.is.reasoningDelta(event) ||
+  LLMEvent.is.toolInputStart(event) ||
+  LLMEvent.is.toolCall(event)
+
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -238,9 +245,13 @@ const layer = Layer.effect(
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
+      let firstEventMs: number | undefined
+      const streamStartedAt = performance.now()
       const providerStream = llm.stream(request).pipe(
         Stream.runForEach((event) =>
           Effect.gen(function* () {
+            if (firstEventMs === undefined && isFirstTokenEvent(event))
+              firstEventMs = performance.now() - streamStartedAt
             if (overflowFailure || publisher.hasProviderError()) return
             if (LLMEvent.is.providerError(event)) {
               if (isContextOverflowFailure(event) && !publisher.hasAssistantStarted()) {
@@ -351,6 +362,8 @@ const layer = Layer.effect(
           if (stream._tag === "Failure") return yield* Effect.failCause(stream.cause)
           if (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
             return yield* Effect.failCause(settled.cause)
+          if (firstEventMs !== undefined && !publisher.hasProviderError())
+            compaction.recordTTFT(session.id, firstEventMs)
           return { needsContinuation: !publisher.hasProviderError() && needsContinuation, step: currentStep }
         }),
       )

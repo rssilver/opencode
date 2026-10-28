@@ -188,6 +188,35 @@ recent responses stay open. Driven by `buildDisplayRows` in
 - **Placement/UX:** disclosure chevron sits to the right of the label (inline `transform`, RTL-aware
   via `document.documentElement.dir`); the outer wrapper uses `pt-3` for top spacing.
 
+### Session summarizer setting (`compaction.threshold`, `compaction.ttft`)
+
+General settings → **Summarize sessions** (both settings surfaces; shared logic in
+`packages/app/src/components/summarize-sessions.ts`). It is a **server** setting: the app reads
+`serverSync().data.config.compaction` and writes `serverSync().updateConfig({ compaction })`, so it lands in
+the user's global `opencode.json(c)` and also applies outside the app. Global config writes deep-merge, so
+the app writes neutral values instead of deleting keys:
+
+| Option | `auto` | `threshold` | `ttft.enabled` |
+|---|---|---|---|
+| At context limit (default) | true | 1 | false |
+| At 75% / 50% of context | true | 0.75 / 0.5 | false |
+| Auto (context limit + response speed) | true | 1 | true |
+| Off | false | 1 | false |
+
+- **Config keys** (V1 `opencode.json` and V2 `ConfigCompaction.Info`, mapped in `v1/config/migrate.ts`):
+  `threshold` (0, 1] and `ttft: { enabled, factor = 3, min_ms = 1500 }`.
+- **Threshold:** summarize when tokens ≥ `min(context × threshold, usable context)`.
+- **Auto (TTFT):** time-to-first-token is measured per provider attempt (from just before the stream starts
+  to the first text/reasoning delta or tool call) and kept per session in memory. Baseline = minimum of the
+  first 3 measured turns. Summarize when the latest TTFT > baseline × `factor` **and** is more than `min_ms`
+  slower, and the session holds more than 2 × the keep-recent token budget. Samples reset after any summary.
+- **Loop guard:** threshold and TTFT summaries wait for at least 2 new user messages since the last summary,
+  so a large fixed system prompt plus tools can't cause summarize → reply → summarize loops. The hard
+  context-limit summary is unchanged and unguarded.
+- **Both engines:** legacy V1 (`packages/opencode/src/session/overflow.ts`, `compaction.ts`, `processor.ts`,
+  `ttft.ts`; used by the app's sessions today) and V2 (`packages/core/src/session/compaction.ts`,
+  `runner/llm.ts`).
+
 ## Verification
 
 - `session-ui` and `app` typecheck pass (only the pre-existing, unrelated

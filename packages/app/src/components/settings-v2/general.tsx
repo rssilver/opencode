@@ -9,6 +9,14 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
+import { useServerSync } from "@/context/server-sync"
+import {
+  summarizeLabelKeys,
+  summarizeMode,
+  summarizeModes,
+  summarizePatch,
+  type SummarizeCompaction,
+} from "../summarize-sessions"
 import { ExternalLink } from "../external-link"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
@@ -271,6 +279,36 @@ const LanguageSetting = () => {
   )
 }
 
+const SummarizeSessionsSetting = () => {
+  const language = useLanguage()
+  const serverSync = useServerSync()
+  const options = createMemo(() =>
+    summarizeModes.map((value) => ({ value, label: language.t(summarizeLabelKeys[value]) })),
+  )
+  const compaction = () => serverSync().data.config.compaction as SummarizeCompaction | undefined
+  return (
+    <SettingsRowV2
+      title={language.t("settings.general.row.summarizeSessions.title")}
+      description={language.t("settings.general.row.summarizeSessions.description")}
+    >
+      <div data-action="settings-summarize-sessions">
+        <SelectV2
+          appearance="inline"
+          options={options()}
+          placement="bottom-end"
+          gutter={6}
+          current={options().find((option) => option.value === summarizeMode(compaction()))}
+          value={(option) => option.value}
+          label={(option) => option.label}
+          onSelect={(option) =>
+            option && void serverSync().updateConfig({ compaction: summarizePatch(compaction(), option.value) })
+          }
+        />
+      </div>
+    </SettingsRowV2>
+  )
+}
+
 const CollapseThinkingBlocksSetting = () => {
   const language = useLanguage()
   const settings = useSettings()
@@ -434,6 +472,8 @@ export const SettingsGeneralV2: Component<{
             />
           </div>
         </SettingsRowV2>
+
+        <SummarizeSessionsSetting />
 
         <CollapseThinkingBlocksSetting />
 

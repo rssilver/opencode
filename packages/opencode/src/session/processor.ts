@@ -13,6 +13,7 @@ import { Session } from "./session"
 import { LLM } from "./llm"
 import { MessageV2 } from "./message-v2"
 import { isOverflow } from "./overflow"
+import { SessionTTFT } from "./ttft"
 import { PartID } from "./schema"
 import type { SessionID } from "./schema"
 import { SessionRetry } from "./retry"
@@ -113,6 +114,8 @@ const layer = Layer.effect(
         reasoningMap: {},
       }
       let aborted = false
+      let firstTokenMs: number | undefined
+      let attemptStartedAt = 0
 
       const parse = (e: unknown) =>
         MessageV2.fromError(e, {
@@ -276,6 +279,14 @@ const layer = Layer.effect(
       }
 
       const handleEvent = Effect.fnUntraced(function* (value: StreamEvent) {
+        if (
+          firstTokenMs === undefined &&
+          (value.type === "reasoning-delta" ||
+            value.type === "text-delta" ||
+            value.type === "tool-input-start" ||
+            value.type === "tool-call")
+        )
+          firstTokenMs = performance.now() - attemptStartedAt
         switch (value.type) {
           case "reasoning-start":
             if (value.id in ctx.reasoningMap) return
@@ -490,7 +501,8 @@ const layer = Layer.effect(
               .pipe(Effect.ignore, Effect.forkIn(scope))
             if (
               !ctx.assistantMessage.summary &&
-              isOverflow({ cfg: yield* config.get(), tokens: usage.tokens, model: ctx.model })
+              // Soft (threshold) compaction is decided before the next turn, where the message history is available.
+              isOverflow({ cfg: yield* config.get(), tokens: usage.tokens, model: ctx.model, soft: false })
             ) {
               ctx.needsCompaction = true
             }
@@ -651,6 +663,8 @@ const layer = Layer.effect(
             ctx.currentText = undefined
             ctx.reasoningMap = {}
             yield* status.set(ctx.sessionID, { type: "busy" })
+            firstTokenMs = undefined
+            attemptStartedAt = performance.now()
             const stream = llm.stream(streamInput)
 
             yield* stream.pipe(
@@ -689,6 +703,10 @@ const layer = Layer.effect(
             Effect.catch(halt),
             Effect.ensuring(cleanup()),
           )
+
+          // Only clean turns count; the summary request is a different workload and must not skew the baseline.
+          if (firstTokenMs !== undefined && !ctx.assistantMessage.error && !aborted && !ctx.assistantMessage.summary)
+            SessionTTFT.record(ctx.sessionID, firstTokenMs)
 
           if (ctx.needsCompaction) return "compact"
           if (ctx.blocked || ctx.assistantMessage.error) return "stop"

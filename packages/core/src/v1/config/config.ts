@@ -164,6 +164,23 @@ export const Info = Schema.Struct({
       reserved: Schema.optional(NonNegativeInt).annotate({
         description: "Token buffer for compaction. Leaves enough window to avoid overflow during compaction.",
       }),
+      threshold: Schema.optional(Schema.Number.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(1))).annotate({
+        description: "Fraction of the model context window (0-1] at which to summarize the session",
+      }),
+      ttft: Schema.optional(
+        Schema.Struct({
+          enabled: Schema.optional(Schema.Boolean).annotate({
+            description: "Summarize when time-to-first-token degrades relative to the session baseline",
+          }),
+          factor: Schema.optional(Schema.Number.check(Schema.isGreaterThan(0))).annotate({
+            description: "Latest time-to-first-token must exceed baseline times this factor (default: 3)",
+          }),
+          min_ms: Schema.optional(NonNegativeInt).annotate({
+            description:
+              "Latest time-to-first-token must also exceed baseline by this many milliseconds (default: 1500)",
+          }),
+        }),
+      ),
     }),
   ),
   experimental: Schema.optional(

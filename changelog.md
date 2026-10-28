@@ -265,3 +265,26 @@ per-turn final-answer grouping from them is included here.
   `ping` stayed inline until done, and the turn settled as user / group / first answer / group / latest answer.
 - Note: prompts sent through the legacy v1 `prompt_async` route don't stream into the app (it listens on
   the v2 event stream); they appear after a reload. Upstream behavior, not changed here.
+
+## 2026-10-27 — Session summarizer setting (threshold + auto TTFT)
+
+- **app** — "Summarize sessions" row on both General settings surfaces
+  (`components/summarize-sessions.ts`, `settings-general.tsx`, `settings-v2/general.tsx`); writes the server's
+  global config. 7 new i18n keys (English placeholders in the 61 other locales).
+- **core (V2)** — `config/compaction.ts`, `v1/config/config.ts`, `v1/config/migrate.ts`: new `threshold`
+  and `ttft` keys. `session/compaction.ts`: threshold rule, `ttftDegraded`, per-session TTFT samples, loop
+  guard. `session/runner/llm.ts`: TTFT measured per attempt.
+- **opencode (V1)** — `session/overflow.ts` (threshold, `userMessagesSinceCompaction`), `session/ttft.ts`
+  (sample store), `session/processor.ts` (TTFT), `session/compaction.ts` (soft triggers + guard),
+  `session/prompt.ts` (passes session messages to the check).
+- Implemented by a Sonnet subagent from a spec; reviewed here.
+
+### Verification
+- core: compaction, compaction-trigger and runner tests 102/102; `bun typecheck` passes.
+- opencode: `test/session/compaction.test.ts` 59/59 (1 timeout flake seen once by the subagent, not
+  reproduced); `bun typecheck` passes.
+- Live (LM Studio, test project with a 40k context and `threshold: 0.4`): turns at 15.9k and 16.9k tokens,
+  then exactly one summary before the next turn, which restarted at 13.3k tokens. No repeat loop.
+- The app's Select writes `threshold: 0.5` / `ttft.enabled` to the global config after a backend restart
+  (the earlier running backend still had the old schema and dropped the new keys).
+- Not verified live: a TTFT-triggered summary (needs a real slowdown); covered by unit tests only.

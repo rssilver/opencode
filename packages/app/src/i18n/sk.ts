@@ -985,6 +985,13 @@ export const dict = {
   "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
   "settings.general.row.collapseWorkingSections.description":
     "Collapse tool calls and intermediate output between responses into collapsible sections.",
+  "settings.general.row.summarizeSessions.title": "Summarize sessions",
+  "settings.general.row.summarizeSessions.description": "Choose when long sessions are automatically summarized to free up context.",
+  "settings.general.row.summarizeSessions.option.limit": "At context limit",
+  "settings.general.row.summarizeSessions.option.threshold75": "At 75% of context",
+  "settings.general.row.summarizeSessions.option.threshold50": "At 50% of context",
+  "settings.general.row.summarizeSessions.option.auto": "Auto (context limit + response speed)",
+  "settings.general.row.summarizeSessions.option.off": "Off",
   "settings.general.row.newInterface.title": "Nové rozloženie",
   "settings.general.row.newInterface.badge": "Nové",
   "settings.general.row.newInterface.description":

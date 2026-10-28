@@ -24,7 +24,25 @@ option itself (with `optionValue` deriving its key), and the colour-scheme dropd
 the same page uses the identical pattern and works. Do not apply the "pass the string
 key" change.
 
+**Update 2026-10-27:** not reproducible on `collapse-settings`. Selections stick and the menu reopens
+(checked live in the app dev server).
+
 **Leads to check:** what re-renders when a collapse setting changes. Changing a
 collapse setting recomputes the whole timeline behind the dialog. On the old branch,
 that remounted every timeline row (see the "No remounts" note in `spec.md`), which may
 have blocked or reset the dropdown mid-close.
+
+## "Thinking" stays on screen after the turn has finished (upstream)
+
+**Status:** open, pre-existing upstream behavior (also seen by the user outside this branch).
+
+**Reproduce:** In the app, send a prompt that triggers an automatic summary (compaction) in a session
+on the legacy V1 engine. The backend finishes the turn (`exiting` in the server log), but the session
+keeps showing "Thinking" and no answer until the page is reloaded. After a reload, the summary and the
+final answer are both there.
+
+**Seen:** 2026-10-27 with LM Studio (`cyber-tiel-coder-35b-a3b-mtp`), session `ses_e8027c8b5ffeWurnb20RAQW3WM`.
+
+**Leads to check:** whether the compaction step's messages and the follow-up answer are published on the
+event stream the app listens to (v2 `/api/event`), and whether the session status returns to idle in the
+app's store after a compaction run.

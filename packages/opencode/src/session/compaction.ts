@@ -14,13 +14,20 @@ import { NotFoundError } from "@/storage/storage"
 
 import { Effect, Layer, Context } from "effect"
 import { InstanceState } from "@/effect/instance-state"
-import { isOverflow as overflow, usable } from "./overflow"
+import {
+  isOverflow as overflow,
+  SOFT_COMPACTION_MIN_USER_MESSAGES,
+  tokenCount,
+  usable,
+  userMessagesSinceCompaction,
+} from "./overflow"
+import { SessionTTFT } from "./ttft"
 import { serviceUse } from "@opencode-ai/core/effect/service-use"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
-import { buildPrompt } from "@opencode-ai/core/session/compaction"
+import { buildPrompt, ttftDegraded } from "@opencode-ai/core/session/compaction"
 import { SessionCompactionEvent } from "@opencode-ai/schema/session-compaction-event"
 
 export const Event = SessionCompactionEvent
@@ -166,6 +173,9 @@ export interface Interface {
   readonly isOverflow: (input: {
     tokens: SessionV1.Assistant["tokens"]
     model: Provider.Model
+    // Required for soft (threshold or TTFT) compaction; without it only the hard context limit applies.
+    sessionID?: SessionID
+    messages?: SessionV1.WithParts[]
   }) => Effect.Effect<boolean>
   readonly prune: (input: { sessionID: SessionID }) => Effect.Effect<void>
   readonly process: (input: {
@@ -203,13 +213,31 @@ const layer = Layer.effect(
     const isOverflow = Effect.fn("SessionCompaction.isOverflow")(function* (input: {
       tokens: SessionV1.Assistant["tokens"]
       model: Provider.Model
+      sessionID?: SessionID
+      messages?: SessionV1.WithParts[]
     }) {
-      return overflow({
-        cfg: yield* config.get(),
-        tokens: input.tokens,
-        model: input.model,
-        outputTokenMax: flags.outputTokenMax,
-      })
+      const cfg = yield* config.get()
+      const hard = { cfg, tokens: input.tokens, model: input.model, outputTokenMax: flags.outputTokenMax }
+      if (overflow({ ...hard, soft: false })) return true
+      if (!input.messages || cfg.compaction?.auto === false) return false
+      if (userMessagesSinceCompaction(input.messages) < SOFT_COMPACTION_MIN_USER_MESSAGES) return false
+      if (overflow(hard)) return true
+      const ttft = cfg.compaction?.ttft
+      if (!ttft?.enabled || !input.sessionID || tokenCount(input.tokens) <= 2 * preserveRecentBudget(hard)) return false
+      const samples = SessionTTFT.get(input.sessionID)
+      if (samples.length === 0) return false
+      if (
+        !ttftDegraded({
+          samples,
+          latest: samples[samples.length - 1],
+          factor: ttft.factor ?? 3,
+          minMs: ttft.min_ms ?? 1500,
+        })
+      )
+        return false
+      // A speed-triggered attempt always restarts the baseline, even if it fails.
+      SessionTTFT.clear(input.sessionID)
+      return true
     })
 
     const estimate = Effect.fn("SessionCompaction.estimate")(function* (input: {
@@ -457,6 +485,8 @@ const layer = Layer.effect(
         yield* session.updateMessage(processor.message)
         return "stop"
       }
+
+      SessionTTFT.clear(input.sessionID)
 
       if (compactionPart && selected.tail_start_id && compactionPart.tail_start_id !== selected.tail_start_id) {
         yield* session.updatePart({

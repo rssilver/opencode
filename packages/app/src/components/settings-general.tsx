@@ -28,6 +28,13 @@ import {
   useSettings,
 } from "@/context/settings"
 import { decode64 } from "@/utils/base64"
+import {
+  summarizeLabelKeys,
+  summarizeMode,
+  summarizeModes,
+  summarizePatch,
+  type SummarizeCompaction,
+} from "./summarize-sessions"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { ExternalLink } from "./external-link"
 import { SettingsList } from "./settings-list"
@@ -214,6 +221,11 @@ export const SettingsGeneral: Component = () => {
     { value: "once-complete", label: language.t("settings.general.row.collapseThinkingBlocks.option.onceComplete") },
     { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
   ])
+
+  const summarizeOptions = createMemo(() =>
+    summarizeModes.map((value) => ({ value, label: language.t(summarizeLabelKeys[value]) })),
+  )
+  const currentCompaction = () => serverSync().data.config.compaction as SummarizeCompaction | undefined
 
   const collapseShellToolsOptions = createMemo((): { value: "yes" | "once-complete" | "no"; label: string }[] => [
     { value: "yes", label: language.t("settings.general.row.collapseShellTools.option.yes") },
@@ -411,6 +423,27 @@ export const SettingsGeneral: Component = () => {
               onChange={(checked) => settings.general.setEditToolPartsExpanded(checked)}
             />
           </div>
+        </SettingsRow>
+
+        <SettingsRow
+          title={language.t("settings.general.row.summarizeSessions.title")}
+          description={language.t("settings.general.row.summarizeSessions.description")}
+        >
+          <Select
+            data-action="settings-summarize-sessions"
+            options={summarizeOptions()}
+            current={summarizeOptions().find((o) => o.value === summarizeMode(currentCompaction()))}
+            value={(o) => o.value}
+            label={(o) => o.label}
+            onSelect={(option) => {
+              if (!option) return
+              void serverSync().updateConfig({ compaction: summarizePatch(currentCompaction(), option.value) })
+            }}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+            triggerStyle={{ "min-width": "180px" }}
+          />
         </SettingsRow>
 
         <SettingsRow

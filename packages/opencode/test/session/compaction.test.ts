@@ -10,6 +10,7 @@ import { Config } from "@/config/config"
 import { LLM } from "../../src/session/llm"
 import { SessionCompaction } from "../../src/session/compaction"
 import { Token } from "@/util/token"
+import { SessionTTFT } from "../../src/session/ttft"
 import { Plugin } from "../../src/plugin"
 import { provideTmpdirInstance, TestInstance } from "../fixture/fixture"
 import { Session as SessionNs } from "@/session/session"
@@ -559,6 +560,66 @@ describe("session.compaction.isOverflow", () => {
           compaction: { auto: false },
         },
       },
+    ),
+  )
+
+  const softTokens = { input: 55_000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
+  const history = (...roles: ("user" | "summary" | "assistant")[]) =>
+    roles.map((role) => ({
+      info: { role: role === "user" ? "user" : "assistant", summary: role === "summary" ? true : undefined },
+      parts: [],
+    })) as unknown as SessionV1.WithParts[]
+
+  it.live(
+    "applies compaction.threshold below the hard limit once the guard allows it",
+    provideTmpdirInstance(
+      () =>
+        Effect.gen(function* () {
+          const compact = yield* SessionCompaction.Service
+          const model = createModel({ context: 100_000, output: 32_000 })
+          // Hard limit is 68k, threshold limit is 50k.
+          expect(yield* compact.isOverflow({ tokens: softTokens, model })).toBe(false)
+          expect(yield* compact.isOverflow({ tokens: softTokens, model, messages: history("user") })).toBe(true)
+        }),
+      { config: { compaction: { threshold: 0.5 } } },
+    ),
+  )
+
+  it.live(
+    "waits for two new user messages after a compaction before threshold compaction",
+    provideTmpdirInstance(
+      () =>
+        Effect.gen(function* () {
+          const compact = yield* SessionCompaction.Service
+          const model = createModel({ context: 100_000, output: 32_000 })
+          const check = (messages: SessionV1.WithParts[]) => compact.isOverflow({ tokens: softTokens, model, messages })
+          expect(yield* check(history("user", "summary", "user", "assistant"))).toBe(false)
+          expect(yield* check(history("user", "summary", "user", "assistant", "user"))).toBe(true)
+          // The hard limit ignores the guard.
+          const hard = { input: 70_000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
+          expect(yield* compact.isOverflow({ tokens: hard, model, messages: history("summary") })).toBe(true)
+        }),
+      { config: { compaction: { threshold: 0.5 } } },
+    ),
+  )
+
+  it.live(
+    "compacts when time-to-first-token degrades and then clears the samples",
+    provideTmpdirInstance(
+      () =>
+        Effect.gen(function* () {
+          const compact = yield* SessionCompaction.Service
+          const model = createModel({ context: 100_000, output: 32_000 })
+          const sessionID = SessionID.make("ses_ttft_degraded")
+          const input = { tokens: softTokens, model, sessionID, messages: history("user", "user") }
+          expect(yield* compact.isOverflow(input)).toBe(false)
+          ;[500, 400, 450, 5_000].forEach((ms) => SessionTTFT.record(sessionID, ms))
+          expect(yield* compact.isOverflow({ ...input, messages: history("user", "summary", "user") })).toBe(false)
+          expect(yield* compact.isOverflow(input)).toBe(true)
+          expect(SessionTTFT.get(sessionID)).toEqual([])
+          expect(yield* compact.isOverflow(input)).toBe(false)
+        }),
+      { config: { compaction: { ttft: { enabled: true }, preserve_recent_tokens: 1_000 } } },
     ),
   )
 })

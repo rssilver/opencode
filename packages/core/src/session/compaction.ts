@@ -11,6 +11,10 @@ import { Token } from "../util/token"
 
 const DEFAULT_BUFFER = 20_000
 const DEFAULT_KEEP_TOKENS = 8_000
+const DEFAULT_TTFT_FACTOR = 3
+const DEFAULT_TTFT_MIN_MS = 1_500
+const TTFT_BASELINE_TURNS = 3
+const SOFT_MIN_USER_MESSAGES = 2
 const TOOL_OUTPUT_MAX_CHARS = 2_000
 const SUMMARY_OUTPUT_TOKENS = 4_096
 const SUMMARY_TEMPLATE = `Output exactly the Markdown structure shown inside <template> and keep the section order unchanged. Do not include the <template> tags in your response.
@@ -63,6 +67,12 @@ type Settings = {
   readonly auto: boolean
   readonly buffer: number
   readonly tokens: number
+  readonly threshold: number | undefined
+  readonly ttft: {
+    readonly enabled: boolean
+    readonly factor: number
+    readonly minMs: number
+  }
 }
 
 type Dependencies = {
@@ -120,6 +130,13 @@ const serialize = (message: SessionMessage.Message) => {
   return ""
 }
 
+// User messages after the active compaction, or Infinity when the session was never compacted.
+const userMessagesSinceCompaction = (entries: readonly Entry[]) => {
+  const last = entries.findLastIndex((entry) => entry.message.type === "compaction")
+  if (last === -1) return Infinity
+  return entries.slice(last + 1).filter((entry) => entry.message.type === "user").length
+}
+
 const settings = (documents: readonly Config.Entry[]) => {
   const configured = documents
     .filter((entry): entry is Config.Document => entry.type === "document")
@@ -129,9 +146,37 @@ const settings = (documents: readonly Config.Entry[]) => {
       auto: current.auto ?? result.auto,
       buffer: current.buffer ?? result.buffer,
       tokens: current.keep?.tokens ?? result.tokens,
+      threshold: current.threshold ?? result.threshold,
+      ttft: {
+        enabled: current.ttft?.enabled ?? result.ttft.enabled,
+        factor: current.ttft?.factor ?? result.ttft.factor,
+        minMs: current.ttft?.min_ms ?? result.ttft.minMs,
+      },
     }),
-    { auto: true, buffer: DEFAULT_BUFFER, tokens: DEFAULT_KEEP_TOKENS },
+    {
+      auto: true,
+      buffer: DEFAULT_BUFFER,
+      tokens: DEFAULT_KEEP_TOKENS,
+      threshold: undefined,
+      ttft: { enabled: false, factor: DEFAULT_TTFT_FACTOR, minMs: DEFAULT_TTFT_MIN_MS },
+    },
   )
+}
+
+/**
+ * Decides whether the latest time-to-first-token has degraded against the session baseline. The baseline is the
+ * minimum of the first few measured turns because the very first turn can include model load time. Samples are in
+ * measurement order and include the latest one.
+ */
+export const ttftDegraded = (input: {
+  readonly samples: readonly number[]
+  readonly latest: number
+  readonly factor: number
+  readonly minMs: number
+}) => {
+  if (input.samples.length === 0) return false
+  const baseline = Math.min(...input.samples.slice(0, TTFT_BASELINE_TURNS))
+  return input.latest > baseline * input.factor && input.latest - baseline > input.minMs
 }
 
 const select = (
@@ -175,6 +220,12 @@ export const buildPrompt = (input: { readonly previousSummary?: string; readonly
 
 export const make = (dependencies: Dependencies) => {
   const config = settings(dependencies.config)
+  const ttftSamples = new Map<SessionSchema.ID, number[]>()
+  const recordTTFT = (sessionID: SessionSchema.ID, ms: number) => {
+    const samples = ttftSamples.get(sessionID)
+    if (samples) samples.push(ms)
+    else ttftSamples.set(sessionID, [ms])
+  }
   const compactAfterOverflow = Effect.fn("SessionCompaction.compactAfterOverflow")(function* (input: Input) {
     const context = input.model.route.defaults.limits?.context
     if (context === undefined || context <= 0) return false
@@ -227,6 +278,7 @@ export const make = (dependencies: Dependencies) => {
       text: summary,
       recent: selected.recent,
     })
+    ttftSamples.delete(input.sessionID)
     return true
   })
   const compactIfNeeded = Effect.fn("SessionCompaction.compactIfNeeded")(function* (input: Input) {
@@ -234,14 +286,34 @@ export const make = (dependencies: Dependencies) => {
     const context = input.model.route.defaults.limits?.context
     if (context === undefined || context <= 0) return false
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
-    if (
-      estimate({ system: input.request.system, messages: input.request.messages, tools: input.request.tools }) <=
-      context - Math.max(output, config.buffer)
-    )
-      return false
-    return yield* compactAfterOverflow(input)
+    const tokens = estimate({
+      system: input.request.system,
+      messages: input.request.messages,
+      tools: input.request.tools,
+    })
+    if (tokens > context - Math.max(output, config.buffer)) return yield* compactAfterOverflow(input)
+    // Soft triggers wait for new input so a large fixed prompt cannot cause summarize loops.
+    if (userMessagesSinceCompaction(input.entries) < SOFT_MIN_USER_MESSAGES) return false
+    if (config.threshold !== undefined && tokens > context * config.threshold) return yield* compactAfterOverflow(input)
+    if (!slow(input.sessionID, tokens)) return false
+    // A failed speed-triggered attempt must not retry on every following turn; measure a fresh baseline instead.
+    const compacted = yield* compactAfterOverflow(input)
+    ttftSamples.delete(input.sessionID)
+    return compacted
   })
+  const slow = (sessionID: SessionSchema.ID, tokens: number) => {
+    if (!config.ttft.enabled || tokens <= 2 * config.tokens) return false
+    const samples = ttftSamples.get(sessionID)
+    if (!samples) return false
+    return ttftDegraded({
+      samples,
+      latest: samples[samples.length - 1],
+      factor: config.ttft.factor,
+      minMs: config.ttft.minMs,
+    })
+  }
   return {
+    recordTTFT,
     compactIfNeeded,
     compactAfterOverflow,
   }
