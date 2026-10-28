@@ -328,3 +328,49 @@
     }
   }
 }
+
+/* Rows revealed by an expanded "Worked for" section: indented under its header with a guide line on the
+   left (like Devin), and one font size for every row title. Rows are adjacent virtual items, so the
+   per-row line reads as one continuous line. */
+[data-in-section="true"] [data-slot="session-turn-message-container"] {
+  position: relative;
+  padding-left: 34px;
+}
+
+[data-in-section="true"] [data-slot="session-turn-message-container"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 22px;
+  width: 1px;
+  background: var(--border-base);
+}
+
+@media (min-width: 768px) {
+  [data-in-section="true"] [data-slot="session-turn-message-container"] {
+    padding-left: 38px;
+  }
+
+  [data-in-section="true"] [data-slot="session-turn-message-container"]::before {
+    left: 26px;
+  }
+}
+
+[data-in-section="true"]
+  :is(
+    [data-slot="basic-tool-tool-title"],
+    [data-slot="basic-tool-tool-subtitle"],
+    [data-slot="basic-tool-tool-arg"],
+    [data-slot="reasoning-part-label"],
+    [data-component="context-tool-group-trigger"]
+  ) {
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: 20px;
+}
+
+[data-in-section="true"] :is([data-slot="basic-tool-tool-title"], [data-slot="reasoning-part-label"]) {
+  color: var(--text-base);
+}
+

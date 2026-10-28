@@ -4,7 +4,7 @@ import { TimelineRow } from "./timeline-row"
 // middle answers and finished work (thinking, tool calls) fold into "Worked for" sections.
 
 export type DisplayRow =
-  | { kind: "row"; key: string; row: TimelineRow.TimelineRow }
+  | { kind: "row"; key: string; row: TimelineRow.TimelineRow; inSection?: true }
   | { kind: "section"; key: string; durationMs?: number; count: number }
 
 export type BuildDisplayRowsInput = {
@@ -94,7 +94,7 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
     // timeline; expanded sections additionally reveal their child rows inline.
     result.push(buildSummary(slice, durationForRow))
     if (isExpanded(key)) {
-      for (const row of slice) result.push({ kind: "row", key: TimelineRow.key(row), row })
+      for (const row of slice) result.push({ kind: "row", key: TimelineRow.key(row), row, inSection: true })
     }
     runStart = -1
   }

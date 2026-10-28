@@ -567,7 +567,7 @@ export function MessageTimeline(props: {
     return part?.type === "tool" && part.tool === "wrap_up" && part.state.status === "completed"
   }
 
-  const displayRows = createMemo(() => {
+  const displayRows = createMemo((): DisplayRow[] => {
     const base = timelineRows()
     if (!settings.general.collapseWorkingSections()) {
       return base.map((row) => ({ kind: "row" as const, key: TimelineRow.key(row), row }))
@@ -1429,6 +1429,10 @@ export function MessageTimeline(props: {
       const value = displayRow()
       return value?.kind === "section" ? value : undefined
     })
+    const inSection = createMemo(() => {
+      const value = displayRow()
+      return value?.kind === "row" && value.inSection === true
+    })
     const tool = () => {
       const value = row()
       if (!value || value._tag !== "AssistantPart" || value.group.type !== "part") return
@@ -1480,6 +1484,7 @@ export function MessageTimeline(props: {
             element = value
           }}
           data-index={item().index}
+          data-in-section={inSection() ? "true" : undefined}
           style={{ "min-height": ready() ? undefined : `${initialItem.size}px` }}
         >
           <Show when={row()}>{(value) => <TimelineRowView row={value()} onSizeChange={handleSizeChange} />}</Show>

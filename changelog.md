@@ -464,3 +464,12 @@ per-turn final-answer grouping from them is included here.
   `src/provider/lmstudio-progress.ts`, `src/session/llm.ts`.
 - Verification: under Node, a simulated title request + progress watcher on an unloaded 2 GB model → 41
   load updates 0→100%, title request then 200. User's model restored afterwards. Tests + typecheck pass.
+
+## 2026-10-28 — Nicer expanded "Worked for" sections
+
+- **app** — Rows revealed by an expanded "Worked for" section are tagged (`inSection` on the display row in
+  `timeline/working-sections.ts`, `data-in-section` on the row in `message-timeline.tsx`) and styled in
+  `app/src/index.css`: indented under the header, a 1px guide line on the left (`--border-base`), and one font
+  size/weight (13px regular) for thinking, tool, explored and shell row titles.
+- Verification: typecheck clean, timeline tests 41 pass; checked computed styles and a screenshot of a mock
+  section in the dev preview (no live session available in the preview backend).
