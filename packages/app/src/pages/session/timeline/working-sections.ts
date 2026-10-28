@@ -1,7 +1,7 @@
 import { TimelineRow } from "./timeline-row"
 
-// Each turn's final answer always stays visible so it is never swallowed by a group;
-// everything else folds into collapsible "worked on" sections between/around the answers.
+// Global collapse: between user messages, each turn's first and latest answer stay visible;
+// middle answers and finished work (thinking, tool calls) fold into "Worked for" sections.
 
 export type DisplayRow =
   | { kind: "row"; key: string; row: TimelineRow.TimelineRow }
@@ -24,19 +24,20 @@ export type BuildDisplayRowsInput = {
   // Always-visible boundary rows (e.g. the user's own message) that are never
   // folded into a collapsed section; they split the timeline into turn groups.
   isBoundary?: (row: TimelineRow.TimelineRow) => boolean
-  // True when a row belongs to a turn that is still running; such rows stay visible
-  // inline and only fold into a collapsed group once the turn finishes.
-  isActive?: (row: TimelineRow.TimelineRow) => boolean
+  // True for a row whose work is still in progress (running tool, streaming text or
+  // thinking). It stays inline; finished rows of a running turn fold as they complete.
+  isUnfinished?: (row: TimelineRow.TimelineRow) => boolean
 }
 
 const hasUserMessageID = (row: TimelineRow.TimelineRow): row is TimelineRow.TimelineRow & { userMessageID: string } =>
   "userMessageID" in row
 
+// Keyed by the first row only, so a section that grows while its turn runs keeps its key
+// (and its expanded state) instead of being replaced.
 function sectionKeyFor(slice: readonly TimelineRow.TimelineRow[]): string {
   const first = slice[0]
-  const last = slice[slice.length - 1]
-  if (!first || !last) return "working-section:empty"
-  return `working-section:${TimelineRow.key(first)}:${TimelineRow.key(last)}`
+  if (!first) return "working-section:empty"
+  return `working-section:${TimelineRow.key(first)}`
 }
 
 export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
@@ -48,7 +49,7 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
   const durationForUserMessage = input.durationForUserMessage ?? (() => undefined)
   const isExpanded = input.isExpanded ?? (() => false)
   const isBoundary = input.isBoundary ?? ((row) => row._tag === "UserMessage")
-  const isActive = input.isActive ?? (() => false)
+  const isUnfinished = input.isUnfinished ?? (() => false)
   const durationForRow =
     input.durationForRow ??
     ((row) => {
@@ -62,21 +63,19 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
     if (isResponse(rows[i])) responseIndices.push(i)
   }
 
-  // A turn can emit several responses; its last one is the real answer and must never
-  // be swallowed by a group. responseIndices is in row order, so keeping each turn's
-  // largest index marks exactly the final answer of every turn.
-  const finalAnswerIndexByTurn = new Map<string, number>()
-  for (let k = 0; k < responseIndices.length; k++) {
-    const index = responseIndices[k]
-    finalAnswerIndexByTurn.set(rows[index].userMessageID, index)
-  }
-  const finalAnswer = new Set(finalAnswerIndexByTurn.values())
-
-  // Visible responses are each turn's final answer plus any flagged as persisted.
-  // Middle answers and thinking/tool-calls are not visible, so they fold into groups.
-  const visible = new Set<number>()
+  // A turn can emit several responses. Its first and latest stay visible; responseIndices
+  // is in row order, so the first index seen per turn is its first answer and the last
+  // one seen is its latest.
+  const firstAnswerByTurn = new Map<string, number>()
+  const latestAnswerByTurn = new Map<string, number>()
   for (const index of responseIndices) {
-    if (finalAnswer.has(index) || isPersisted(rows[index])) visible.add(index)
+    const turn = rows[index].userMessageID
+    if (!firstAnswerByTurn.has(turn)) firstAnswerByTurn.set(turn, index)
+    latestAnswerByTurn.set(turn, index)
+  }
+  const visible = new Set([...firstAnswerByTurn.values(), ...latestAnswerByTurn.values()])
+  for (const index of responseIndices) {
+    if (isPersisted(rows[index])) visible.add(index)
   }
 
   const result: DisplayRow[] = []
@@ -98,10 +97,9 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
-    // Boundaries (user messages), visible responses, and rows from a turn that is
-    // still running are always shown inline so active thinking/shell/explore work
-    // stays on screen; it only folds into a collapsed group once the turn is done.
-    if (isBoundary(row) || (isResponse(row) && visible.has(i)) || (hasUserMessageID(row) && isActive(row))) {
+    // Boundaries (user messages), visible responses and unfinished work always render
+    // inline; everything else folds, including finished work of a turn that is still running.
+    if (isBoundary(row) || (isResponse(row) && visible.has(i)) || isUnfinished(row)) {
       flushRun(i)
       result.push({ kind: "row", key: TimelineRow.key(row), row })
       continue

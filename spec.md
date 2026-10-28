@@ -159,13 +159,9 @@ Collapses everything between/around visible responses into collapsible groups so
 recent responses stay open. Driven by `buildDisplayRows` in
 `packages/app/src/pages/session/timeline/working-sections.ts`.
 
-- **Visible responses:** each turn (`userMessageID`) can emit several assistant messages/responses; only
-  its **final** answer stays visible so it is never swallowed by a group. `buildDisplayRows` maps every
-  response to its turn and keeps the largest (last) index per turn as that turn's final answer, plus any
-  response flagged `persist` (e.g. the initial confirmation). All other responses — middle/intermediate
-  answers inside a turn — are not visible, so they fold into the turn's "Worked for…" group along with its
-  thinking and tool-calls. A turn that emits only one answer keeps it visible; a turn with no text answer
-  folds its whole work into the next group.
+- **Visible responses:** between user messages, each turn (`userMessageID`) keeps its **first** and
+  **latest** text answer visible, plus any response flagged `persist`. Middle answers fold into the turn's
+  "Worked for…" groups together with thinking and tool calls (shell, read, explore, ...).
 - **No ghost sections:** `TurnGap` spacer rows (inserted before each turn by the projection,
   `rows.ts`) are filtered out up front so spacers can never become empty groups or shift section
   keys/content.
@@ -176,12 +172,14 @@ recent responses stay open. Driven by `buildDisplayRows` in
   supplies the resolver via `partMessageDurationMs`, which maps each `AssistantPart` to its own
   assistant message (`time.created`/`time.completed`) and contributes only that response's span;
   repeated parts of one message count once, and pure-thinking sections show the generic label.
-- **Active-turn rows stay visible:** an `isActive` predicate treats rows from a still-running turn as
-  inline anchors (flush + render) so running thinking/shell/explore work never collapses until the
-  turn finishes; it folds normally afterward. `message-timeline.tsx` passes
-  `isActive: row => turnInProgress(row.userMessageID)`, which is true while the session is busy on that
-  turn **or** any of its assistant messages has no `time.completed`. The second check covers the
-  moment when session status briefly reads idle between provider steps.
+- **Fold as you go:** while a turn runs, finished work folds immediately; only unfinished rows stay
+  inline (`isUnfinished` → `rowIsUnfinished` in `message-timeline.tsx`): a tool part that is pending or
+  running, text/thinking of an incomplete assistant message without `time.end`, and status rows (thinking
+  indicator, retry, error) of a running turn. A turn counts as running while the session is busy on it or
+  any of its assistant messages lacks `time.completed` (`turnInProgress`), since status can read idle
+  between provider steps.
+- **Stable section keys:** a section is keyed by its first row only, so a section that grows while its
+  turn runs keeps its key and its expanded/collapsed state.
 - **No remounts:** `displayRows()` builds new wrapper objects on every streamed token.
   `VirtualTimelineRow` unwraps them to the projection's own stable row object and switches between
   the section header and the row with two `<Show>`s, so rows update in place instead of remounting

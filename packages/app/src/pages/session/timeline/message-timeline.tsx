@@ -534,9 +534,23 @@ export function MessageTimeline(props: {
       durationForUserMessage: (id) => turnDurationMs(id),
       durationForRow: partMessageDurationMs,
       isExpanded: (key) => expandedSections[key],
-      isActive: (row) => "userMessageID" in row && turnInProgress(row.userMessageID),
+      isUnfinished: rowIsUnfinished,
     })
   })
+
+  // Work that is still happening in a running turn stays on screen; finished work folds right away.
+  function rowIsUnfinished(row: TimelineRow.TimelineRow) {
+    if (!("userMessageID" in row) || !turnInProgress(row.userMessageID)) return false
+    // Status rows of a running turn (thinking indicator, retry, error) always stay inline.
+    if (row._tag !== "AssistantPart" || row.group.type !== "part") return true
+    const part = getMsgPart(row.group.ref.messageID, row.group.ref.partID)
+    if (!part) return true
+    if (part.type === "tool") return part.state.status === "pending" || part.state.status === "running"
+    const message = messageByID().get(row.group.ref.messageID)
+    if (!message || message.role !== "assistant" || typeof message.time.completed === "number") return false
+    // Streaming text/thinking has no end time yet.
+    return !("time" in part && part.time && "end" in part.time && typeof part.time.end === "number")
+  }
 
   const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
     get count() {

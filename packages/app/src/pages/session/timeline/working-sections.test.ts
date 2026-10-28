@@ -40,21 +40,22 @@ describe("buildDisplayRows", () => {
     }
   })
 
-  test("a turn with several responses keeps only its final answer visible; middle answers fold", () => {
+  test("a turn keeps its first and latest answers visible; middle answers fold", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
       new TimelineRow.Thinking({ userMessageID: "u1" }),
+      part("a1", "f0"), // first answer of turn u1 -> visible
+      new TimelineRow.Thinking({ userMessageID: "u1" }),
       part("a1", "m1"), // middle answer of turn u1 -> folds
       new TimelineRow.Thinking({ userMessageID: "u1" }),
-      part("a1", "f1"), // final answer of turn u1 -> visible
+      part("a1", "l2"), // latest answer of turn u1 -> visible
     ]
-    const isResp = anyResponse(isResponse("m1"), isResponse("f1"))
+    const isResp = anyResponse(isResponse("f0"), isResponse("m1"), isResponse("l2"))
     const result = buildDisplayRows({ rows, isResponse: isResp })
 
-    expect(result.map((item) => item.kind)).toEqual(["row", "section", "row"])
-    const section = result[1]
-    expect(section.kind).toBe("section")
-    if (section.kind === "section") expect(section.count).toBe(3) // thinking + m1 + thinking all folded, f1 stays open
+    expect(result.map((item) => item.kind)).toEqual(["row", "section", "row", "section", "row"])
+    const middle = result[3]
+    if (middle.kind === "section") expect(middle.count).toBe(3) // thinking + m1 + thinking folded together
   })
 
   test("persisted responses stay visible even when they are not a turn's final answer", () => {
@@ -74,22 +75,28 @@ describe("buildDisplayRows", () => {
     expect(result.map((item) => item.kind)).toEqual(["row", "row", "section", "row"])
   })
 
-  test("active-turn rows stay visible instead of folding into a section", () => {
+  test("in a running turn, finished work folds while unfinished work stays inline", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
-      part("u1", "text-0"), // would fold if the turn were done
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
-      part("u1", "text-1"), // visible
-      part("u1", "text-2"), // visible
+      part("a1", "text-0"), // first answer -> visible
+      part("a1", "tool-done"), // finished tool -> folds
+      part("a1", "tool-running"), // running tool -> inline
     ]
-    const isResp = anyResponse(isResponse("text-0"), isResponse("text-1"), isResponse("text-2"))
     const result = buildDisplayRows({
       rows,
-      isResponse: isResp,
-      isActive: (row) => "userMessageID" in row && row.userMessageID === "u1",
+      isResponse: isResponse("text-0"),
+      isUnfinished: (row) =>
+        row._tag === "AssistantPart" && row.group.type === "part" && row.group.ref.partID === "tool-running",
     })
-    // The whole still-running turn renders inline; nothing collapses.
-    expect(result.map((item) => item.kind)).toEqual(["row", "row", "row", "row", "row"])
+    expect(result.map((item) => item.kind)).toEqual(["row", "row", "section", "row"])
+  })
+
+  test("a section keeps its key as it grows while the turn runs", () => {
+    const start = [new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }), part("a1", "tool-1")]
+    const grown = [...start, part("a1", "tool-2")]
+    const sectionKey = (rows: TimelineRow.TimelineRow[]) =>
+      buildDisplayRows({ rows, isResponse: () => false }).find((item) => item.kind === "section")?.key
+    expect(sectionKey(grown)).toBe(sectionKey(start))
   })
 
   test("TurnGap spacer rows are ignored (no ghost sections)", () => {

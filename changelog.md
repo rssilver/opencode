@@ -247,3 +247,21 @@ per-turn final-answer grouping from them is included here.
 - `theme/context.tsx` had a second fallback, in the mount step, that still read `"system"` and overrode
   the `"dark"` initial value, so dark mode only appeared when the OS was dark. Both fallbacks are `"dark"` now.
   Verified on a fresh browser profile with a light OS theme.
+
+## 2026-10-27 — Global collapse: first + latest answer, fold finished work during a turn
+
+### Working sections (app)
+- `working-sections.ts`: each turn keeps its first and latest answer visible (was: final only); middle
+  answers fold. `isActive` (whole running turn inline) replaced by `isUnfinished` (row-level), so finished
+  thinking/tool rows fold as soon as they finish, even mid-turn. Section keys use the first row only, so a
+  growing section keeps its expanded state.
+- `message-timeline.tsx`: `rowIsUnfinished` decides per row (running/pending tool, streaming text or
+  thinking, status rows of a running turn).
+
+### Verification
+- `working-sections.test.ts` updated (first+latest visible, mid-turn folding, stable key): timeline suite
+  39/39; `bun typecheck` (app) passes.
+- Live, LM Studio, prompt sent from the app input: `echo one` folded the moment it finished, the running
+  `ping` stayed inline until done, and the turn settled as user / group / first answer / group / latest answer.
+- Note: prompts sent through the legacy v1 `prompt_async` route don't stream into the app (it listens on
+  the v2 event stream); they appear after a reload. Upstream behavior, not changed here.
