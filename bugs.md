@@ -54,3 +54,9 @@ app's store after a compaction run.
 **Reproduce:** from `packages/opencode`, `bun test test/tool/read.test.ts -t "normalizes read permission paths on Windows"`.
 Fails with `File not found: E:\users\roses\appdata\local\temp\...\test.txt`: the path is lower-cased
 before the file is opened, which breaks on a temp folder whose real path has upper-case segments.
+
+## Compaction test "anchors repeated compactions with the previous summary" times out under load
+
+**Status:** open, timing flake. Passes when run alone (3/3), fails with a 5 s timeout (≈5.4 s) when run in the
+same `bun test` invocation as other test files. Not yet compared against `dev`, so it may or may not predate
+this branch. Fix options: raise that test's timeout, or find what makes it slow when other files run first.
