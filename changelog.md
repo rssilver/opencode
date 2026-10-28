@@ -577,3 +577,15 @@ per-turn final-answer grouping from them is included here.
   src/pages/session` 101 pass, 2 files fail to load with a pre-existing solid-js `use` export
   error (same failure without these changes). Checked in the app dev server against a local
   backend: panel opens from the header, cards collapse, state survives reload.
+
+## 2026-10-28 — Merged parallel feature branches and rebuilt the desktop app
+
+- **git** — Merged `claude/interactive-visuals-0995d9` (#9), `claude/password-vault-5a7db7` (#5),
+  `claude/video-watch-f68ed0` (#11) and `claude/session-info-panel-10bf04` (#8) into `collapse-settings`. Doc
+  conflicts (`changelog.md`, `spec.md`) were resolved by union. One code conflict: the agent tool list in
+  `packages/desktop/src/main/agent-tools/server.ts` now registers `browserSignInTool` and `videoTools` together.
+- **docs** — `todo.md`: #5, #8, #9, #11 marked done.
+- Verification: `bun typecheck` clean in `opencode`, `app`, `desktop` and `session-ui`. The new opencode tool tests
+  pass (23). Desktop tests: 104 run, and the only failure is the pre-existing upstream `draft-store.test.ts`
+  (`node:sqlite` is not available under Bun). `bun run build` + `bun run package` produced
+  `packages/desktop/dist/opencode-desktop-win-x64.exe` (186 MB).
