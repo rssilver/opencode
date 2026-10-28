@@ -57,6 +57,7 @@ import { SessionReminders } from "./reminders"
 import { SessionTools } from "./tools"
 import { SessionVerify } from "./verify"
 import { LLMEvent } from "@opencode-ai/llm"
+import { LmStudioProgress } from "@/provider/lmstudio-progress"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -640,7 +641,13 @@ const layer = Layer.effect(
       sessionID: SessionID,
     ) {
       const exit = yield* provider.getModel(providerID, modelID).pipe(Effect.exit)
-      if (Exit.isSuccess(exit)) return exit.value
+      if (Exit.isSuccess(exit)) {
+        // Custom LM Studio models usually have no configured context limit, which disables auto-compaction.
+        // Use the context length the loaded model is actually served with.
+        if (exit.value.limit.context > 0) return exit.value
+        const context = yield* Effect.promise(() => LmStudioProgress.contextLength(exit.value))
+        return context ? { ...exit.value, limit: { ...exit.value.limit, context } } : exit.value
+      }
       const err = Cause.squash(exit.cause)
       if (Provider.ModelNotFoundError.isInstance(err)) {
         const hint = err.suggestions?.length ? ` Did you mean: ${err.suggestions.join(", ")}?` : ""

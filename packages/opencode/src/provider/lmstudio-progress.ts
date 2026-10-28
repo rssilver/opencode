@@ -111,7 +111,26 @@ async function models(origin: string) {
   if (!response?.ok) return undefined
   const body = await response.json().catch(() => undefined)
   if (!body || !Array.isArray(body.models)) return undefined
-  return body.models as { key?: string; loaded_instances?: unknown[] }[]
+  return body.models as Listing[]
+}
+
+type Listing = {
+  key?: string
+  max_context_length?: number
+  loaded_instances?: { config?: { context_length?: number } }[]
+}
+
+/** Context length of a loaded LM Studio model. Unloaded models report undefined: LM Studio may load them smaller than their max. */
+export function loadedContextLength(listing: Listing | undefined) {
+  const value = listing?.loaded_instances?.[0]?.config?.context_length
+  return typeof value === "number" && value > 0 ? value : undefined
+}
+
+/** Context length LM Studio currently serves this model with, or undefined when it is not a reachable, loaded LM Studio model. */
+export async function contextLength(model: Pick<Provider.Model, "providerID" | "api">) {
+  const origin = await detect(model)
+  if (!origin) return undefined
+  return loadedContextLength((await models(origin))?.find((item) => item.key === model.api.id))
 }
 
 /** Origin of the LM Studio server serving this model, or undefined when it is not (a reachable) LM Studio. */

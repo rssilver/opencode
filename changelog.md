@@ -476,3 +476,17 @@ per-turn final-answer grouping from them is included here.
 - Follow-up: guide line now continuous (overshoots each row, trimmed by the virtual row's `overflow: clip`),
   and Explored (`context-tool-group-title`) and Edit/Write/Patch (`message-part-title*`) titles join the
   13px regular style. Checked on a mock with clipped, spaced virtual rows in the dev preview.
+
+## 2026-10-28 — Auto-compaction for LM Studio models without a context limit
+
+- **opencode** — Custom LM Studio models usually have no `limit.context` in `opencode.json`, so it was 0 and
+  `isOverflow` never fired: those sessions never auto-compacted. `SessionPrompt.getModel`
+  (`src/session/prompt.ts`) now fills a missing context limit from the context length the loaded model is
+  served with (`LmStudioProgress.contextLength` / `loadedContextLength` in `src/provider/lmstudio-progress.ts`,
+  read from `/api/v1/models` → `loaded_instances[0].config.context_length`). Unloaded models are left alone,
+  because LM Studio can load them with less than `max_context_length`. A configured limit always wins.
+- **docs** — `todo.md`: #1–#4 and the collapse-arrow quick fix marked done. `bugs.md`: the "Thinking stays
+  after compaction" bug could not be reproduced through manual summarize + continue or soft auto-compaction
+  (live in the app with LM Studio). Only the hard-overflow path is still unverified.
+- Verification: new unit tests (`test/provider/lmstudio-progress.test.ts`, 10 pass), `bun typecheck` clean, and
+  a live call against LM Studio returned 262144 for the loaded model and undefined for an unloaded one.

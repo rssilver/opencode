@@ -74,3 +74,21 @@ describe("LmStudioProgress hosts", () => {
     expect(LmStudioProgress.lmsCandidate("linux", "/home/a").endsWith("lms")).toBe(true)
   })
 })
+
+describe("LmStudioProgress.loadedContextLength", () => {
+  test("uses the loaded instance's context length", () => {
+    expect(
+      LmStudioProgress.loadedContextLength({
+        key: "tiel-coder-35b-a3b",
+        max_context_length: 262144,
+        loaded_instances: [{ config: { context_length: 32768 } }],
+      }),
+    ).toBe(32768)
+  })
+
+  test("is undefined for unloaded or unknown models", () => {
+    expect(LmStudioProgress.loadedContextLength({ key: "m", max_context_length: 262144, loaded_instances: [] })).toBeUndefined()
+    expect(LmStudioProgress.loadedContextLength(undefined)).toBeUndefined()
+    expect(LmStudioProgress.loadedContextLength({ loaded_instances: [{ config: { context_length: 0 } }] })).toBeUndefined()
+  })
+})
