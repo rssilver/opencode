@@ -490,3 +490,31 @@ per-turn final-answer grouping from them is included here.
   (live in the app with LM Studio). Only the hard-overflow path is still unverified.
 - Verification: new unit tests (`test/provider/lmstudio-progress.test.ts`, 10 pass), `bun typecheck` clean, and
   a live call against LM Studio returned 262144 for the loaded model and undefined for an unloaded one.
+
+## 2026-10-28 — Session info side panel
+
+### Session info panel (app)
+- New `packages/app/src/pages/session/session-info-panel.tsx`: a 300px right-hand panel of
+  collapsible cards, shown on desktop widths for an open session. Toggle button added to the
+  session header in both layouts (`components/session/session-header.tsx`, v1 header and
+  `SessionHeaderV2Actions`), using the `layout-right` / `layout-right-full` icons.
+- Open/closed state and each card's collapsed state persist per user in
+  `Persist.global("session.info.v1")`. One shared state object (created once in a detached
+  root, with the platform passed to `persisted` explicitly) backs both the header toggle and
+  the panel.
+- Cards: **Environment** (runs on this computer / WSL distro / remote server URL, project name,
+  path, git branch from `vcs`), **Context** (the header meter's details: tokens used / limit,
+  summary trigger, mode, TTFT trend + sparkline), **Changes** (+/- lines and file count from
+  `session.summary`, falling back to `session_diff`; click opens the review panel).
+- `components/session/session-context-meter.tsx`: split into `useContextMeter()` +
+  `ContextMeterDetails` so the panel reuses the tooltip content; header meter unchanged.
+- `pages/session.tsx`: the panel row is wrapped in a horizontal flex container with the info
+  panel after it (wrapper intentionally not re-indented to keep the diff small for merges).
+- Not built: **Servers** card (the desktop preload exposes no IPC for `preview_start` previews)
+  and **Background tasks** card (no such data in the app). Outputs card and Create PR / Commit
+  actions from todo #8 also not built.
+- i18n: `session.info.*` keys in `en.ts` only.
+- Verification: `bun typecheck` in `packages/app` passes; `bun test src/components/session
+  src/pages/session` 101 pass, 2 files fail to load with a pre-existing solid-js `use` export
+  error (same failure without these changes). Checked in the app dev server against a local
+  backend: panel opens from the header, cards collapse, state survives reload.

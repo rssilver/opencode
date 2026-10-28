@@ -252,6 +252,15 @@ match `read` (`external_directory` + `read`).
 - **Text-only model, no vision model:** a text result explains how to set `vision.model`.
 - Config: `vision.model` in the V1 schema (`packages/core/src/v1/config/config.ts`).
 
+### Session info side panel (app)
+
+A collapsible right-hand panel (`pages/session/session-info-panel.tsx`) toggled from the session
+header, showing what the session is working with. Cards: **Environment** (this computer / WSL /
+remote server, project, path, branch), **Context** (the header context meter's details, via
+`useContextMeter` + `ContextMeterDetails`), and **Changes** (+/- lines and files; click opens the
+review panel). Panel and card open state persist per user under `session.info.v1`. Servers and
+Background tasks cards are not built yet: there is no app-side data source for them.
+
 ## Verification
 
 - `session-ui` and `app` typecheck pass (only the pre-existing, unrelated

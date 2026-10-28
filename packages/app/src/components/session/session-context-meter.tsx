@@ -22,7 +22,8 @@ function Row(props: { name: JSX.Element; value: JSX.Element }) {
   )
 }
 
-export function ContextMeter() {
+/** Context meter data shared by the header meter and the session info panel. */
+export function useContextMeter() {
   const sync = useSync()
   const sdk = useSDK()
   const serverSync = useServerSync()
@@ -54,13 +55,18 @@ export function ContextMeter() {
     return context && tokens !== undefined ? Math.min(100, Math.round((tokens / context) * 100)) : undefined
   })
   const warn = createMemo(() => !!trend()?.slowing || (trigger() !== undefined && (used() ?? 0) >= trigger()!))
+  return { params, compaction, limit, used, trigger, trend, percent, warn }
+}
 
+export function ContextMeterDetails(props: { meter: ReturnType<typeof useContextMeter>; class?: string }) {
+  const language = useLanguage()
+  const { compaction, limit, used, trigger, trend, percent } = props.meter
   const number = (value: number) => value.toLocaleString(language.intl())
   const seconds = (ms: number) => language.t("context.meter.seconds", { value: (ms / 1000).toFixed(1) })
   const share = (tokens: number) => Math.round((tokens / limit()!.context) * 100)
 
-  const details = () => (
-    <div class="flex w-[300px] max-w-[calc(100vw-24px)] flex-col gap-2">
+  return (
+    <div class={props.class ?? "flex w-[300px] max-w-[calc(100vw-24px)] flex-col gap-2"}>
       <Row
         name={language.t("context.meter.used")}
         value={`${number(used() ?? 0)} / ${number(limit()!.context)} (${percent() ?? 0}%)`}
@@ -121,6 +127,13 @@ export function ContextMeter() {
       </Show>
     </div>
   )
+}
+
+export function ContextMeter() {
+  const language = useLanguage()
+  const meter = useContextMeter()
+  const { params, limit, percent, warn } = meter
+  const details = () => <ContextMeterDetails meter={meter} />
 
   return (
     <Show when={params.id && limit() && percent() !== undefined}>
