@@ -306,3 +306,20 @@ per-turn final-answer grouping from them is included here.
   732/732 (i18n parity included); `bun run build` in `packages/desktop` succeeds.
 - **Not verified at runtime.** Launching a second desktop instance for an automated check failed: the
   user's installed "OpenCode Dev" app was running and holds the single-instance lock for the same app id.
+
+## 2026-10-27 — `view_images` tool with a vision-model fallback
+
+- **opencode** — `src/tool/view-images.ts` + `.txt` (new), registered in `src/tool/registry.ts`;
+  `test/tool/view-images.test.ts` (7 tests, fallback covered with a fake LLM/provider).
+- **core** — `v1/config/config.ts`: `vision: { model?: string }`; `v1/config/migrate.ts`: `vision` counts as a
+  V1 key.
+- Implemented by a Sonnet subagent from a spec; reviewed here.
+
+### Verification
+- `bun typecheck` passes in `packages/opencode` and `packages/core`; `view-images.test.ts` 7/7.
+- `read.test.ts` → "normalizes read permission paths on Windows" fails, and also fails with the registry change
+  reverted, so it's pre-existing (logged in `bugs.md`).
+- Live (LM Studio, `cyber-tiel-coder-35b-a3b-mtp`, a folder with two labelled PNGs and a .txt): with the model
+  marked vision-capable, the tool attached both images (skipping the .txt) and the model read "PEARS: 5" and
+  "APPLES: 3"; with a text-only alias of the same model and `vision.model` set, nothing was attached and the
+  vision model's description gave the same answer.

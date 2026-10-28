@@ -236,6 +236,22 @@ bar (bare words or input with spaces search DuckDuckGo; localhost gets `http://`
   hides the page while an app dialog, menu or listbox is open.
 - **URL rules:** `packages/desktop/src/main/browser-url.ts` (tested in `browser-url.test.ts`).
 
+### `view_images` tool and `vision.model` (V1 engine)
+
+A builtin tool (`packages/opencode/src/tool/view-images.ts`, description in `view-images.txt`) that lets a
+model look at the images in a folder: `path` (folder or file), `pattern` (glob), `recursive`, `offset`,
+`limit` (default 6, 1–12) and `question`. Images are found by glob and confirmed by sniffing their content
+(png/jpeg/gif/webp only; other files are skipped), sorted by path and paged. The text result lists the
+total, the page, and each file's path, MIME type, dimensions and size, with a next-page hint. Permissions
+match `read` (`external_directory` + `read`).
+
+- **Vision-capable model** (`ctx.extra.model.capabilities.input.image`): the page's images are attached.
+- **Text-only model with `vision.model` set** (`opencode.json`: `{ "vision": { "model": "provider/model" } }`):
+  the images plus `question` go to that model in one small request, and its description is returned as
+  text; nothing is attached to the conversation.
+- **Text-only model, no vision model:** a text result explains how to set `vision.model`.
+- Config: `vision.model` in the V1 schema (`packages/core/src/v1/config/config.ts`).
+
 ## Verification
 
 - `session-ui` and `app` typecheck pass (only the pre-existing, unrelated

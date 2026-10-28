@@ -46,3 +46,11 @@ final answer are both there.
 **Leads to check:** whether the compaction step's messages and the follow-up answer are published on the
 event stream the app listens to (v2 `/api/event`), and whether the session status returns to idle in the
 app's store after a compaction run.
+
+## `read` test "normalizes read permission paths on Windows" fails (pre-existing)
+
+**Status:** open, not caused by this branch (fails with this branch's tool changes reverted).
+
+**Reproduce:** from `packages/opencode`, `bun test test/tool/read.test.ts -t "normalizes read permission paths on Windows"`.
+Fails with `File not found: E:\users\roses\appdata\local\temp\...\test.txt`: the path is lower-cased
+before the file is opened, which breaks on a temp folder whose real path has upper-case segments.
