@@ -252,6 +252,21 @@ match `read` (`external_directory` + `read`).
 - **Text-only model, no vision model:** a text result explains how to set `vision.model`.
 - Config: `vision.model` in the V1 schema (`packages/core/src/v1/config/config.ts`).
 
+### `show_visual` tool — interactive visuals in the chat
+
+The model can answer with a live HTML/CSS/JS visual (simulation, graph, diagram, calculator) instead of only text.
+
+- **Tool** (`packages/opencode/src/tool/show-visual.ts`): `show_visual({ title, html })`, app/desktop clients only.
+  Display-only; keeps a copy at `<data>/visuals/<project id>/<slug>-<call id>.html`.
+- **Card** (`packages/session-ui/src/components/visual-card.tsx`): sandboxed iframe (`allow-scripts` only, `srcdoc`)
+  with a CSP allowing only cdn.jsdelivr.net, cdnjs.cloudflare.com and unpkg.com and no other network. Theme CSS
+  variables available to the visual: `--background`, `--surface`, `--text`, `--text-weak`, `--border`, `--accent`,
+  `--success`, `--warning`, `--danger`, `--font-sans`, `--font-mono`. Auto height (max 640px) plus a resize handle.
+- **Actions**: Full screen, Reload, Source, Save (downloads the `.html`). Errors from the visual are listed on the card;
+  "Ask to fix" sends them to the model.
+- Not yet: open in side panel, "Edit", a "Saved visuals" menu, automatic error reports without a click, screenshots
+  for the model, live theme switching without Reload.
+
 ## Verification
 
 - `session-ui` and `app` typecheck pass (only the pre-existing, unrelated

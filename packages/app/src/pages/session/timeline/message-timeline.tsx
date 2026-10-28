@@ -560,11 +560,13 @@ export function MessageTimeline(props: {
     return !!part && part.type === "text" && part.metadata?.persist === true
   })
 
-  // The end-of-turn card stays under the final answer instead of folding into "Worked for".
+  // The end-of-turn card and interactive visuals stay under the final answer instead of folding into "Worked for".
   const isWrapUpRow = (row: TimelineRow.TimelineRow) => {
     if (row._tag !== "AssistantPart" || row.group.type !== "part") return false
     const part = getMsgPart(row.group.ref.messageID, row.group.ref.partID)
-    return part?.type === "tool" && part.tool === "wrap_up" && part.state.status === "completed"
+    return (
+      part?.type === "tool" && (part.tool === "wrap_up" || part.tool === "show_visual") && part.state.status === "completed"
+    )
   }
 
   const displayRows = createMemo((): DisplayRow[] => {

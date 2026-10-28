@@ -5,6 +5,7 @@ import { PlanExitTool } from "./plan"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { WrapUpTool } from "./wrap-up"
+import { ShowVisualTool } from "./show-visual"
 import { ShellTool } from "./shell"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
@@ -109,6 +110,7 @@ const layer = Layer.effect(
     const memory = yield* MemoryTool
     const question = yield* QuestionTool
     const wrapUp = yield* WrapUpTool
+    const showVisual = yield* ShowVisualTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
@@ -233,6 +235,7 @@ const layer = Layer.effect(
           patch: Tool.init(patchtool),
           question: Tool.init(question),
           wrapUp: Tool.init(wrapUp),
+          showVisual: Tool.init(showVisual),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
           ...(codeModeTool ? { execute: Tool.init(codeModeTool) } : {}),
@@ -244,6 +247,7 @@ const layer = Layer.effect(
             tool.invalid,
             ...(questionEnabled ? [tool.question] : []),
             ...(wrapUpEnabled ? [tool.wrapUp] : []),
+            ...(wrapUpEnabled ? [tool.showVisual] : []),
             tool.shell,
             tool.read,
             tool.viewImages,
