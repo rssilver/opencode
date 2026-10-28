@@ -355,3 +355,17 @@ mid-session without restarting anything.
   app using the model); never kill processes the app didn't start.
 - Effort: medium–high (provider load/unload adapters, turn queuing, ComfyUI/Invoke client). Impact: high for
   local-only setups.
+
+### 19. Prompt tags (`#visual` and friends) to ask for a tool explicitly
+Typing a tag in the prompt forces a specific kind of answer instead of hoping the model picks it.
+- **Tags:** `#visual` (answer with `show_visual`), and later others that map to tools or modes, e.g. `#video`
+  (`video_watch`), `#image` (local image generation, #18), `#plan`, `#local` / `#cloud` (model choice, #17).
+- **Behaviour:** the tag is stripped from the text and turned into an instruction for that turn ("answer with an
+  interactive visual using show_visual; reuse a saved template if one fits"). If the tool isn't available for the
+  current model or client, say so on the turn instead of silently ignoring the tag.
+- **Prompt bar:** typing `#` opens an autocomplete list of tags with one-line descriptions, like `@` for files and
+  `/` for commands; chosen tags render as chips. Check `#` doesn't clash with existing prompt syntax (markdown
+  headings at line start, issue refs like `#123`): only match known tag names after whitespace.
+- **Config:** tags defined in config (`tags: { visual: { tool: "show_visual", prompt: "..." } }`) so users can add
+  their own; built-ins ship as defaults.
+- Effort: low–medium (prompt parsing + autocomplete + config). Impact: medium–high (predictable control).

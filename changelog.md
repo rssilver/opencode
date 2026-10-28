@@ -609,3 +609,10 @@ per-turn final-answer grouping from them is included here.
   generation through ComfyUI/InvokeAI.
 - Verification: `bun test test/tool/show-visual.test.ts` (10 pass), `bun typecheck` clean in opencode and
   session-ui.
+
+### 2026-10-28 — Desktop rebuild with the visual library; todo #19
+
+- **desktop** — rebuilt with `bun run build` + `bun run package` in `packages/desktop`, including the saved visual
+  library (`5fb9f6659e`). Installer: `packages/desktop/dist/opencode-desktop-win-x64.exe` (186 MB, 14:15).
+- **docs** — `todo.md` #19: prompt tags such as `#visual` that force a tool or mode for one turn, with `#`
+  autocomplete in the prompt bar and user-defined tags in config.
