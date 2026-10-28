@@ -473,3 +473,6 @@ per-turn final-answer grouping from them is included here.
   size/weight (13px regular) for thinking, tool, explored and shell row titles.
 - Verification: typecheck clean, timeline tests 41 pass; checked computed styles and a screenshot of a mock
   section in the dev preview (no live session available in the preview backend).
+- Follow-up: guide line now continuous (overshoots each row, trimmed by the virtual row's `overflow: clip`),
+  and Explored (`context-tool-group-title`) and Edit/Write/Patch (`message-part-title*`) titles join the
+  13px regular style. Checked on a mock with clipped, spaced virtual rows in the dev preview.
