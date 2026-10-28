@@ -627,3 +627,8 @@ per-turn final-answer grouping from them is included here.
 - Verification: opened the user's session `ses_e7c452b88ffeaaLiyMdEHPWL9z` in the app dev server; all three visual
   calls (including one that reused the saved `quadratic-plotter` template) render as cards with the plot drawn, no
   raw tool rows. `bun typecheck` clean in session-ui and app.
+
+### 2026-10-28 — Desktop rebuild with the visual card fix
+
+- **desktop** — rebuilt (`bun run build` + `bun run package`) with `c9a31fcb03`. Installer:
+  `packages/desktop/dist/opencode-desktop-win-x64.exe` (186 MB, 14:23).
