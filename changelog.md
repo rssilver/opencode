@@ -444,3 +444,11 @@ per-turn final-answer grouping from them is included here.
   `ui/src/i18n/en.ts`).
 - Verification: prompt progress streamed live 0→100% from the user's LM Studio; load path unit-tested only.
   Tests: lmstudio-progress 8, processor-effect 17, app session 104 pass; typecheck clean.
+
+## 2026-10-28 — Fix: LM Studio prompt progress in the desktop app
+
+- **opencode** — `src/provider/lmstudio-progress.ts` used `Bun.which` / `Bun.file` / `Bun.spawn`, which don't
+  exist when the server runs inside Electron (Node), so prompt progress silently never started in the desktop
+  app. Switched to `which` from core, `fs/promises.access`, and `Process.spawn` with a Node stdout stream.
+- Verification: bundled the module for Node and ran it under Node 24 against LM Studio — progress
+  0→100% for one request, clean exit after the 30s idle shutdown. Unit tests and typecheck pass.

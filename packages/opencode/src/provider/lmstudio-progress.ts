@@ -1,7 +1,10 @@
 export * as LmStudioProgress from "./lmstudio-progress"
 
+import { access } from "fs/promises"
 import os from "os"
 import path from "path"
+import { which } from "@opencode-ai/core/util/which"
+import { Process } from "@/util/process"
 import { Schema } from "effect"
 import type { Provider } from "./provider"
 
@@ -213,17 +216,21 @@ async function run(origin: string, modelID: string, controller: AbortController,
 type Subscriber = { model: string; since: number; push: (value: number) => void }
 
 const subscribers = new Set<Subscriber>()
-let child: ReturnType<typeof Bun.spawn> | undefined
+// Node APIs only: the desktop app runs this server inside Electron (Node), where `Bun.*` does not exist.
+let child: Process.Child | undefined
 let idleTimer: ReturnType<typeof setTimeout> | undefined
 let exitHooked = false
 let lms: Promise<string | undefined> | undefined
 
 function locateLms() {
   lms ??= (async () => {
-    const found = Bun.which("lms")
+    const found = which("lms")
     if (found) return found
     const candidate = lmsCandidate(process.platform, os.homedir())
-    return (await Bun.file(candidate).exists()) ? candidate : undefined
+    return access(candidate).then(
+      () => candidate,
+      () => undefined,
+    )
   })()
   return lms
 }
@@ -233,7 +240,7 @@ async function ensureChild() {
   const binary = await locateLms()
   if (!binary) return false
   if (child) return true
-  const spawned = Bun.spawn([binary, "log", "stream", "--source", "server", "--json"], {
+  const spawned = Process.spawn([binary, "log", "stream", "--source", "server", "--json"], {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "ignore",
@@ -250,11 +257,11 @@ async function ensureChild() {
 async function pump(spawned: NonNullable<typeof child>) {
   const decoder = new TextDecoder()
   let buffer = ""
-  const reader = (spawned.stdout as ReadableStream<Uint8Array>).getReader()
-  while (true) {
-    const chunk = await reader.read().catch(() => undefined)
-    if (!chunk || chunk.done) break
-    buffer += decoder.decode(chunk.value, { stream: true })
+  const stdout = spawned.stdout
+  if (!stdout) return
+  // A spawn error (e.g. lms removed) ends the stream; the exit promise is already guarded in Process.spawn.
+  for await (const chunk of stdout.on("error", () => undefined)) {
+    buffer += decoder.decode(chunk as Uint8Array, { stream: true })
     const lines = buffer.split(NEWLINE)
     buffer = lines.pop() ?? ""
     lines.forEach(dispatch)
