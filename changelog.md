@@ -323,3 +323,22 @@ per-turn final-answer grouping from them is included here.
   marked vision-capable, the tool attached both images (skipping the .txt) and the model read "PEARS: 5" and
   "APPLES: 3"; with a text-only alias of the same model and `vision.model` set, nothing was attached and the
   vision model's description gave the same answer.
+
+## 2026-10-27 — Context meter in the session header
+
+- **app** — `components/session/context-meter.ts` (pure math: token count, summary trigger, TTFT samples/trend,
+  sparkline) + `context-meter.test.ts` (11 tests); `components/session/session-context-meter.tsx` (ring +
+  percentage with a tooltip); `components/session/session-header.tsx` renders it in both header variants.
+  11 `context.meter.*` i18n keys (English placeholders in the 61 other locales; additions only).
+- Tooltip: tokens used / context window, summary trigger point (mirrors the server rule: `min(context ×
+  threshold, usable)`, "Summaries off" when `compaction.auto` is false), summarize mode, time to first token
+  (latest vs baseline = min of first 3) with a 20-sample sparkline, and a slowdown ratio. The ring turns to
+  the warning colour when Auto would trigger or the trigger point is reached.
+- Implemented by a Sonnet subagent; reviewed here. Widened the tooltip (220 → 300px) and stopped truncating
+  values after the live check showed the TTFT row cut off.
+
+### Verification
+- `bun typecheck` (app) passes; meter + i18n tests 24/24; full app suite 743/743 (subagent run).
+- Live in the app dev server with LM Studio: header shows "7%"; tooltip read 13,303 / 200,000 (7%),
+  summarizes at 192,000 (96%, = context − max output, as on the server), "At context limit", TTFT 0.6s
+  (baseline 0.5s), 1.1× baseline, sparkline drawn.
