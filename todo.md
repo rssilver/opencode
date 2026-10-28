@@ -8,13 +8,13 @@ Sorted by impact vs. effort: quick wins first, then large high-impact work, then
 | 2 | ~~Add models and providers from the app~~ **done** | low–medium | high | form and config writes already exist |
 | 3 | ~~Update the session title as the session progresses~~ **done** | low–medium | medium | small backend change, fixes stale titles |
 | 4 | ~~Interactive "next step" cards at the end of a turn~~ **done** (extras left) | medium | high | big usability gain; reuses the `question` tool pattern |
-| 5 | Browser password vault so the agent can sign in | medium | high | bookmarks done; vault + agent sign-in left |
+| 5 | ~~Browser password vault so the agent can sign in~~ **done** | medium | high | bookmarks done; vault + agent sign-in left |
 | 6 | Sidebar rework (Devin / Claude Code style) and `@` workspace tagging | high | high | biggest UX change; do after the quick wins |
 | 7 | Deep-wiki for a workspace (Devin style) | medium–high | high | faster, cheaper sessions on big repos |
-| 8 | Session info side panel | medium | medium | easier once the new layout exists |
-| 9 | Interactive visuals in the chat (model decides) | medium | high | simulations, graphs, calculators inline; save/open on the side |
+| 8 | ~~Session info side panel~~ **done** (Servers + Background tasks cards left) | medium | medium | easier once the new layout exists |
+| 9 | ~~Interactive visuals in the chat~~ **done** | medium | high | simulations, graphs, calculators inline; save/open on the side |
 | 10 | Open files the way a person would (viewers + native apps) | medium | medium | step 1 shares #9's preview; step 2 waits for #14 |
-| 11 | Let a vision model "watch" videos (browser or local files) | medium | medium | builds on browser tools + `view_images`; feeds #15 |
+| 11 | ~~Let a vision model "watch" videos~~ **done** | medium | medium | builds on browser tools + `view_images`; feeds #15 |
 | 12 | Screenshot + bug catcher (annotate and send) | medium | medium | editor UI is most of the work |
 | 13 | Screen control for the model ("computer use") | medium–high | medium | native input helper + careful safety UI |
 | 14 | Native desktop apps (.exe) in a panel | high | low–medium | fragile on Windows; mostly useful with #13 |
@@ -85,7 +85,7 @@ Clicking a button sends its canned reply as the user's next message; the user ca
   rebuild), and a pinned task list that the model updates while it works (the checklist these apps show
   above the card).
 
-### 5. Browser password vault so the agent can sign in
+### 5. Browser password vault so the agent can sign in (done)
 **Done:** bookmarks (Chrome/Edge import, star button, menu); cookies already persist in
 `persist:opencode-browser`, so a site stays logged in until its session expires.
 **Goal:** a password manager for the built-in browser. You log in to a site once yourself; after that the
@@ -136,7 +136,7 @@ wiki is large and read on demand.
 - **View it:** a Wiki tab with a page tree, rendered Markdown + Mermaid, and "Ask about this page".
 - Effort: medium–high. Impact: high on big repos (faster, cheaper sessions).
 
-### 8. Session info side panel
+### 8. Session info side panel (done; Servers and Background tasks cards need a data source)
 A collapsible right-hand panel of cards showing what the session is working with and what is running:
 - **Environment:** where it runs (this computer / WSL / remote server), project name + path, git branch.
 - **Context:** the context meter from the header, expanded (tokens, summary trigger, TTFT trend).
@@ -150,7 +150,7 @@ A collapsible right-hand panel of cards showing what the session is working with
 - Each card collapsible and remembered per user; panel toggle in the session header; data comes from
   existing session/sync state plus the desktop tool server (previews) — no new backend storage needed.
 
-### 9. Interactive visuals in the chat (model decides)
+### 9. Interactive visuals in the chat (done)
 The model can answer some prompts with a live, interactive result rendered in the chat instead of only text:
 e.g. "would foxes survive in a savannah, who would prey on them?" → a small predator/prey world simulation
 with sliders; a maths question → the function graphed with the answer marked; "compare these loans" → a
@@ -185,7 +185,7 @@ Click a file in the file tree and see it properly, and let the agent do the same
   and finding its window.
 - Effort: step 1 medium; step 2 low once #14 exists.
 
-### 11. Let a vision model "watch" videos (browser or local files)
+### 11. Let a vision model "watch" videos (done)
 Turn a video into something a text + image model can read: a timestamped transcript plus key frames.
 - **Tool:** `video_watch({ source: url | path, question?, start?, end?, maxFrames? })` returns transcript
   chunks with timestamps, frames at chosen times (as images, via the `view_images` path), and chapter titles.
