@@ -452,3 +452,15 @@ per-turn final-answer grouping from them is included here.
   app. Switched to `which` from core, `fs/promises.access`, and `Process.spawn` with a Node stdout stream.
 - Verification: bundled the module for Node and ran it under Node 24 against LM Studio — progress
   0→100% for one request, clean exit after the 30s idle shutdown. Unit tests and typecheck pass.
+
+## 2026-10-28 — Fix: LM Studio "Loading model" progress never showed
+
+- **opencode** — Title generation (and summaries) run in the background on the same LM Studio model (no
+  small-model match), and their `/v1/chat/completions` request JIT-loaded the model silently before the
+  processor's load watcher ran, so it saw the model as loading/loaded and skipped. New shared
+  `LmStudioProgress.ensureLoaded` (one load per origin+model through `/api/v1/chat`); `LLM.run` awaits it
+  before every LM Studio request, and the processor's watcher attaches to the same load. Closing a watcher
+  now only detaches it (interrupting a session no longer cancels the load). Files:
+  `src/provider/lmstudio-progress.ts`, `src/session/llm.ts`.
+- Verification: under Node, a simulated title request + progress watcher on an unloaded 2 GB model → 41
+  load updates 0→100%, title request then 200. User's model restored afterwards. Tests + typecheck pass.

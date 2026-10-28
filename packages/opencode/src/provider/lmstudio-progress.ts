@@ -169,14 +169,38 @@ function channel(onClose: () => void) {
 // ---------------------------------------------------------------------------
 // Model load progress
 
+type Loader = { listeners: Set<(value: number) => void>; done: Promise<void> }
+
+const loaders = new Map<string, Loader>()
+
 /**
- * Streams load fractions while LM Studio loads a listed-but-unloaded model, ending after `model_load.end`.
- * Ends immediately when the model is already loaded or anything fails.
+ * Loads a listed-but-unloaded model through the native endpoint (the only one that reports load progress).
+ * Every LM Studio request awaits this first, so side requests (title, summary) can't JIT-load the model
+ * silently through `/v1/chat/completions` before the progress watcher gets a chance. Concurrent callers
+ * share one load; it resolves immediately when the model is already loaded or anything fails.
+ */
+export function ensureLoaded(origin: string, modelID: string) {
+  const key = `${origin} ${modelID}`
+  const existing = loaders.get(key)
+  if (existing) return existing
+  const listeners = new Set<(value: number) => void>()
+  const done = run(origin, modelID, new AbortController(), (value) => listeners.forEach((listener) => listener(value)))
+    .catch(() => undefined)
+    .finally(() => loaders.delete(key))
+  const loader = { listeners, done }
+  loaders.set(key, loader)
+  return loader
+}
+
+/**
+ * Streams load fractions of the shared load, ending after `model_load.end`.
+ * Closing only detaches this watcher; the load itself keeps going for the other requests waiting on it.
  */
 export function load(origin: string, modelID: string): Watcher {
-  const controller = new AbortController()
-  const out = channel(() => controller.abort())
-  void run(origin, modelID, controller, out.push).finally(out.end)
+  const loader = ensureLoaded(origin, modelID)
+  const out = channel(() => loader.listeners.delete(out.push))
+  loader.listeners.add(out.push)
+  void loader.done.finally(out.end)
   return out.watcher
 }
 

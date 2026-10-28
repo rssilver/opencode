@@ -7,6 +7,7 @@ import { serviceUse } from "@opencode-ai/core/effect/service-use"
 import { Context, Effect, Layer } from "effect"
 import * as Stream from "effect/Stream"
 import { streamText, wrapLanguageModel, type ModelMessage, type Tool } from "ai"
+import { LmStudioProgress } from "@/provider/lmstudio-progress"
 import type { LLMEvent } from "@opencode-ai/llm"
 import { LLMClient } from "@opencode-ai/llm/route"
 import type { LLMClientService } from "@opencode-ai/llm/route"
@@ -91,6 +92,9 @@ const live: Layer.Layer<
         agent: input.agent.name,
         mode: input.agent.mode,
       })
+
+      const lmstudio = yield* Effect.promise(() => LmStudioProgress.detect(input.model))
+      if (lmstudio) yield* Effect.promise(() => LmStudioProgress.ensureLoaded(lmstudio, input.model.api.id).done)
 
       const [language, cfg, item, info] = yield* Effect.all(
         [
