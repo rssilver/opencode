@@ -476,3 +476,26 @@ per-turn final-answer grouping from them is included here.
 - Follow-up: guide line now continuous (overshoots each row, trimmed by the virtual row's `overflow: clip`),
   and Explored (`context-tool-group-title`) and Edit/Write/Patch (`message-part-title*`) titles join the
   13px regular style. Checked on a mock with clipped, spaced virtual rows in the dev preview.
+
+## 2026-10-28 — Browser password vault and agent sign-in
+
+- **desktop** — new `src/main/browser-passwords.ts`: `safeStorage`-encrypted vault in userData
+  (`opencode.browser-passwords.bin`) with saved logins, "never save" origins and agent sign-in grants;
+  exact-origin matching; Chrome CSV parsing; save/update offers; sign-in permission prompts.
+- **desktop** — new sandboxed tab preload `src/preload/browser-login.ts` (added as a preload input in
+  `electron.vite.config.ts`, set in `browser-panel.ts`) reports login submits over synchronous IPC. Console
+  output was rejected as the channel because `spyRendererConsole` logs renderer console messages to disk.
+- **desktop** — new agent tool `browser_sign_in({ site })` in `src/main/agent-tools/browser-sign-in.ts`
+  (registered in `agent-tools/server.ts`). Fills and submits saved logins, including two-step flows, from the
+  main process; returns only `signed_in` / `failed` / `needs_user`.
+- **desktop** — IPC `browser-passwords-*`, `browser-sign-in-answer` in `main/ipc.ts`; preload
+  `window.api.browser.passwords` in `src/preload/index.ts`.
+- **app** — `pages/session/browser-passwords.tsx`: save/update bar and "Allow the agent to sign in?" bar in the
+  browser panel, and a Passwords dialog from the bookmarks menu (list, show, add, edit, delete, CSV import,
+  revoke permissions). Types in `src/browser.ts`; strings `browser.passwords.*` in `i18n/en.ts`.
+- Verification: `bun typecheck` clean in `packages/desktop` and `packages/app`; `browser-passwords.test.ts`
+  9 pass (the desktop suite's only failure is the existing `draft-store` test, since Bun has no `node:sqlite`).
+  An Electron harness ran the real panel, preload, vault and tool against a local fake two-step login page
+  with made-up values: save offer → saved; agent sign-in → `signed_in`; denied → `failed`; one-time-code page →
+  `needs_user`; wrong password → `failed`; other origin → no match. No password appeared in any renderer
+  message, and the vault file had no plain text. The renderer UI was typechecked but not viewed in the app.

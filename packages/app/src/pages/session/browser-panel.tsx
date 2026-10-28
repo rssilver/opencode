@@ -5,6 +5,7 @@ import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 import type { BrowserBookmark, BrowserBounds, BrowserState } from "@/browser"
 import { BookmarksMenu, BookmarkStar } from "./browser-bookmarks"
+import { PasswordBars } from "./browser-passwords"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
@@ -216,6 +217,8 @@ export function BrowserPanel(props: { onClose?: () => void }) {
               }}
             />
           </form>
+
+          <PasswordBars api={api()} />
 
           {/* Placeholder only: the native browser view is layered over this rectangle. */}
           <div ref={viewport} class="min-h-0 flex-1" />

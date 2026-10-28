@@ -229,12 +229,42 @@ bar (bare words or input with spaces search DuckDuckGo; localhost gets `http://`
   pushed on `browser-state`. IPC `browser-*` handlers in `main/ipc.ts`, exposed as `window.api.browser`.
 - **Security:** separate session partition `persist:opencode-browser`, so the app's permissive CORS hooks and
   renderer permission handler never apply to browsed sites; only fullscreen is granted, device access is
-  denied, downloads are cancelled; sandbox + context isolation, no Node, no preload; only http/https/
+  denied, downloads are cancelled; sandbox + context isolation, no Node; the only preload is the login reporter below; only http/https/
   about:blank may load (`will-frame-navigate`, `will-redirect`); popups become tabs, never native windows.
 - **Renderer:** `packages/app/src/pages/session/browser-panel.tsx`; shared types in `packages/app/src/browser.ts`;
   open state in `context/layout.tsx` (`view().browser`). Native views paint above the DOM, so the panel
   hides the page while an app dialog, menu or listbox is open.
 - **URL rules:** `packages/desktop/src/main/browser-url.ts` (tested in `browser-url.test.ts`).
+
+### Browser password vault and `browser_sign_in` (desktop only)
+
+Saved logins for the built-in browser, so the agent can sign in again after a session expires.
+
+- **Storage:** `packages/desktop/src/main/browser-passwords.ts`. Entries `{ origin, username, password, created,
+  updated }` plus `never` (origins not to offer saving for) and `grants` (origins the agent may always sign in
+  to), stored as one `safeStorage`-encrypted file `opencode.browser-passwords.bin` in userData (written via a temp
+  file + rename). Without OS encryption the vault is read-only empty and saving is disabled. Matching is by exact
+  origin (`siteOrigin`): subdomains, other schemes and look-alike hosts never match. Tested in
+  `browser-passwords.test.ts` (origin rules, matching, save/update offers, upsert/rename, Chrome CSV, encrypted
+  round-trip).
+- **Save offers:** each tab gets a sandboxed preload (`src/preload/browser-login.ts`, built as
+  `out/preload/browser-login.js`) that exposes nothing to the page and reports login submits (submit event,
+  "Next" buttons outside a submit, Enter in form-less fields) with synchronous IPC `browser-login-submit`.
+  It does not use console output, because `spyRendererConsole` writes every renderer console message to the
+  log files. Only main-frame reports count, and the origin comes from the frame, not the page. A username-only
+  step is kept for 5 minutes to pair with the password step of two-step sign-ins. The renderer gets
+  `browser-password-offer` with id, host, username and save/update, never the password, and shows
+  "Save password for <host>?" (Save / Never for this site / dismiss) above the page.
+- **Passwords page:** bookmarks menu → "Passwords…" (`packages/app/src/pages/session/browser-passwords.tsx`):
+  list, show (one explicit `reveal` IPC per click), add, edit, delete, Chrome CSV import
+  (`name,url,username,password`), revoke agent permissions, and clear "never" sites.
+- **Agent tool:** `browser_sign_in({ site })` in `src/main/agent-tools/browser-sign-in.ts`, registered beside the
+  browser tools. The first time per origin the panel asks "Allow the agent to sign in to <host>?" (Always /
+  This time / No; no answer within 2 minutes counts as No); Always is stored in `grants`. The tool opens the
+  site if the tab is on another origin, then in its own isolated world fills each step (username → Next →
+  wait up to 10s for the password field → submit) with save offers suppressed for that tab. Values are only
+  ever inside the injected script. The model gets `signed_in`, `failed: <reason>` or `needs_user` (one-time
+  code field, reCAPTCHA/hCaptcha/Turnstile, or 2FA/passkey wording).
 
 ### `view_images` tool and `vision.model` (V1 engine)
 
