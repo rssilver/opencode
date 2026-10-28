@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
+import type { BrowserState } from "@opencode-ai/app/browser"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -11,6 +12,24 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
 }
 
 const api: ElectronAPI = {
+  browser: {
+    getState: () => ipcRenderer.invoke("browser-get-state"),
+    subscribe: (cb) => {
+      const handler = (_: unknown, state: BrowserState) => cb(state)
+      ipcRenderer.on("browser-state", handler)
+      return () => ipcRenderer.removeListener("browser-state", handler)
+    },
+    createTab: (url) => ipcRenderer.invoke("browser-create-tab", url),
+    closeTab: (id) => ipcRenderer.invoke("browser-close-tab", id),
+    selectTab: (id) => ipcRenderer.invoke("browser-select-tab", id),
+    navigate: (id, input) => ipcRenderer.invoke("browser-navigate", id, input),
+    back: (id) => ipcRenderer.invoke("browser-back", id),
+    forward: (id) => ipcRenderer.invoke("browser-forward", id),
+    reload: (id) => ipcRenderer.invoke("browser-reload", id),
+    stop: (id) => ipcRenderer.invoke("browser-stop", id),
+    setBounds: (bounds) => ipcRenderer.invoke("browser-set-bounds", bounds),
+    setVisible: (visible) => ipcRenderer.invoke("browser-set-visible", visible),
+  },
   killSidecar: () => ipcRenderer.invoke("kill-sidecar"),
   installCli: () => ipcRenderer.invoke("install-cli"),
   awaitInitialization: () => ipcRenderer.invoke("await-initialization"),

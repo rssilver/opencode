@@ -1,5 +1,6 @@
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import type { WslServersPlatform } from "@opencode-ai/app/wsl/types"
+import type { BrowserPlatform } from "@opencode-ai/app/browser"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 import type { DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
 export type {
@@ -43,6 +44,7 @@ export type FatalRendererError = {
 }
 
 export type ElectronAPI = {
+  browser: BrowserPlatform
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
   awaitInitialization: () => Promise<ServerReadyData>

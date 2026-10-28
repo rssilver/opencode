@@ -3,10 +3,21 @@ import { stat } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron"
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
+import type { BrowserBounds } from "@opencode-ai/app/browser"
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
 
 import type { FatalRendererError, ServerReadyData, TitlebarTheme } from "../preload/types"
+import {
+  browserHistory,
+  closeBrowserTab,
+  createBrowserTab,
+  getBrowserState,
+  navigateBrowserTab,
+  selectBrowserTab,
+  setBrowserBounds,
+  setBrowserVisible,
+} from "./browser-panel"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
@@ -290,6 +301,42 @@ export function registerIpcHandlers(deps: Deps) {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) return
     setTitlebar(win, theme)
+  })
+  // Browser panel: every handler acts on the window that sent the request.
+  const browserWindow = (event: IpcMainInvokeEvent) => BrowserWindow.fromWebContents(event.sender)
+  ipcMain.handle("browser-get-state", (event: IpcMainInvokeEvent) => {
+    const win = browserWindow(event)
+    return win ? getBrowserState(win) : { tabs: [] }
+  })
+  ipcMain.handle("browser-create-tab", (event: IpcMainInvokeEvent, url?: string) => {
+    const win = browserWindow(event)
+    return win ? createBrowserTab(win, typeof url === "string" ? url : undefined) : undefined
+  })
+  ipcMain.handle("browser-close-tab", (event: IpcMainInvokeEvent, id: string) => {
+    const win = browserWindow(event)
+    if (win && typeof id === "string") closeBrowserTab(win, id)
+  })
+  ipcMain.handle("browser-select-tab", (event: IpcMainInvokeEvent, id: string) => {
+    const win = browserWindow(event)
+    if (win && typeof id === "string") selectBrowserTab(win, id)
+  })
+  ipcMain.handle("browser-navigate", (event: IpcMainInvokeEvent, id: string, input: string) => {
+    const win = browserWindow(event)
+    if (win && typeof id === "string" && typeof input === "string") navigateBrowserTab(win, id, input)
+  })
+  for (const action of ["back", "forward", "reload", "stop"] as const) {
+    ipcMain.handle(`browser-${action}`, (event: IpcMainInvokeEvent, id: string) => {
+      const win = browserWindow(event)
+      if (win && typeof id === "string") browserHistory(win, id, action)
+    })
+  }
+  ipcMain.handle("browser-set-bounds", (event: IpcMainInvokeEvent, bounds: BrowserBounds) => {
+    const win = browserWindow(event)
+    if (win && bounds) setBrowserBounds(win, bounds)
+  })
+  ipcMain.handle("browser-set-visible", (event: IpcMainInvokeEvent, visible: boolean) => {
+    const win = browserWindow(event)
+    if (win) setBrowserVisible(win, visible === true)
   })
   ipcMain.handle("run-desktop-menu-action", (event: IpcMainInvokeEvent, action: DesktopMenuAction) => {
     runDesktopMenuAction(BrowserWindow.fromWebContents(event.sender), action, {

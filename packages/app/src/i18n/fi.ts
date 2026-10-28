@@ -1185,4 +1185,15 @@ export const dict = {
   "help.tabs.persistence": "Kun avaat sovelluksen uudelleen, välilehtesi ovat yhä avoinna.",
   "help.tabs.worktrees":
     "Uusi ulkoasu ei vielä tue Git-työpuita, mutta tuki on tulossa pian. Jos haluat jatkaa aiemman ulkoasun käyttöä, voit vaihtaa ulkoasua asetuksissa. Huomaa kuitenkin, että uudesta ulkoasusta tulee pysyvä muutaman viikon kuluttua.",
+  "command.browser.toggle": "Toggle browser",
+  "browser.panel.title": "Browser",
+  "browser.tabs": "Browser tabs",
+  "browser.tab.untitled": "New tab",
+  "browser.address.placeholder": "Search or enter address",
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload",
+  "browser.stop": "Stop loading",
+  "browser.newTab": "New tab",
+  "browser.closeTab": "Close tab",
 }

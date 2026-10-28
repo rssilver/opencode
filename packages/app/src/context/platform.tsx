@@ -5,6 +5,7 @@ import type { DesktopMenuAction } from "../desktop-menu"
 import { ServerConnection } from "./server"
 import type { WslServersPlatform } from "../wsl/types"
 import type { UpdaterPlatform } from "../updater"
+import type { BrowserPlatform } from "../browser"
 import type { DraftStore } from "@/utils/draft-store"
 
 type PickerPaths = string | string[] | null
@@ -73,6 +74,9 @@ type PlatformBase = {
 
   /** Application-global desktop updater */
   updater?: UpdaterPlatform
+
+  /** Built-in browser panel backed by native views (desktop only) */
+  browser?: BrowserPlatform
 
   /** Fetch override */
   fetch?: typeof fetch

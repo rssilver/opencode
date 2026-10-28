@@ -1188,4 +1188,15 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sessies worden gearchiveerd.",
   "workspace.reset.note":
     "Hierdoor wordt de werkruimte opnieuw ingesteld zodat deze overeenkomt met de standaardbranch.",
+  "command.browser.toggle": "Toggle browser",
+  "browser.panel.title": "Browser",
+  "browser.tabs": "Browser tabs",
+  "browser.tab.untitled": "New tab",
+  "browser.address.placeholder": "Search or enter address",
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload",
+  "browser.stop": "Stop loading",
+  "browser.newTab": "New tab",
+  "browser.closeTab": "Close tab",
 }

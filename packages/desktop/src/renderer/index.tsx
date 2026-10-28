@@ -225,6 +225,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       return window.api.revealPath(path)
     },
 
+    browser: window.api.browser,
+
     storage,
     draftStore: createDraftStore({
       get: window.api.draftGet,

@@ -281,6 +281,9 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           height: DEFAULT_TERMINAL_HEIGHT,
           opened: false,
         },
+        browser: {
+          opened: false,
+        },
         review: {
           diffStyle: "split" as ReviewDiffStyle,
           panelOpened: DEFAULT_REVIEW_PANEL_OPENED,
@@ -818,6 +821,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           if (typeof file === "string") return file
         })
         const terminalOpened = createMemo(() => store.terminal?.opened ?? false)
+        const browserOpened = createMemo(() => store.browser?.opened ?? false)
         const reviewPanelOpened = createMemo(() => store.review?.panelOpened ?? DEFAULT_REVIEW_PANEL_OPENED)
         const reviewPanelSource = createMemo(() => (reviewPanelOpened() ? ephemeral.reviewPanelSource : "other"))
 
@@ -831,6 +835,15 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           const value = current.opened ?? false
           if (value === next) return
           setStore("terminal", "opened", next)
+        }
+
+        function setBrowserOpened(next: boolean) {
+          if (!store.browser) {
+            setStore("browser", { opened: next })
+            return
+          }
+          if (browserOpened() === next) return
+          setStore("browser", "opened", next)
         }
 
         function setReviewPanelOpened(next: boolean, source: ReviewPanelSource) {
@@ -884,6 +897,18 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
             },
             toggle() {
               setTerminalOpened(!terminalOpened())
+            },
+          },
+          browser: {
+            opened: browserOpened,
+            open() {
+              setBrowserOpened(true)
+            },
+            close() {
+              setBrowserOpened(false)
+            },
+            toggle() {
+              setBrowserOpened(!browserOpened())
             },
           },
           reviewPanel: {

@@ -217,6 +217,25 @@ the app writes neutral values instead of deleting keys:
   `ttft.ts`; used by the app's sessions today) and V2 (`packages/core/src/session/compaction.ts`,
   `runner/llm.ts`).
 
+### Built-in browser panel (desktop only)
+
+A browser panel in the right-hand column of a session (new layout), next to the review and terminal
+panels. Open it with the titlebar monitor button, `Mod+Shift+B`, or `/browser`; all three exist only when
+`platform.browser` is present (desktop). It has tabs (max 8), back/forward/reload-or-stop, and an address
+bar (bare words or input with spaces search DuckDuckGo; localhost gets `http://`, other hosts `https://`).
+
+- **Main process:** `packages/desktop/src/main/browser-panel.ts` — one `WebContentsView` per tab, layered
+  over the app window at the bounds the renderer reports (scaled by the window zoom factor); state is
+  pushed on `browser-state`. IPC `browser-*` handlers in `main/ipc.ts`, exposed as `window.api.browser`.
+- **Security:** separate session partition `persist:opencode-browser`, so the app's permissive CORS hooks and
+  renderer permission handler never apply to browsed sites; only fullscreen is granted, device access is
+  denied, downloads are cancelled; sandbox + context isolation, no Node, no preload; only http/https/
+  about:blank may load (`will-frame-navigate`, `will-redirect`); popups become tabs, never native windows.
+- **Renderer:** `packages/app/src/pages/session/browser-panel.tsx`; shared types in `packages/app/src/browser.ts`;
+  open state in `context/layout.tsx` (`view().browser`). Native views paint above the DOM, so the panel
+  hides the page while an app dialog, menu or listbox is open.
+- **URL rules:** `packages/desktop/src/main/browser-url.ts` (tested in `browser-url.test.ts`).
+
 ## Verification
 
 - `session-ui` and `app` typecheck pass (only the pre-existing, unrelated

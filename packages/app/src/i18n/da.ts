@@ -1265,4 +1265,15 @@ export const dict = {
   "help.tabs.persistence": "Dine faner er stadig åbne, når du åbner appen igen.",
   "help.tabs.worktrees":
     "Det nye design understøtter endnu ikke Git Worktrees, men understøttelsen kommer snart. Hvis du foretrækker at fortsætte med det tidligere layout, kan du skifte mellem layoutene under Indstillinger. Bemærk, at det nye layout bliver permanent om nogle få uger.",
+  "command.browser.toggle": "Toggle browser",
+  "browser.panel.title": "Browser",
+  "browser.tabs": "Browser tabs",
+  "browser.tab.untitled": "New tab",
+  "browser.address.placeholder": "Search or enter address",
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload",
+  "browser.stop": "Stop loading",
+  "browser.newTab": "New tab",
+  "browser.closeTab": "Close tab",
 }

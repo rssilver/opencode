@@ -288,3 +288,21 @@ per-turn final-answer grouping from them is included here.
 - The app's Select writes `threshold: 0.5` / `ttft.enabled` to the global config after a backend restart
   (the earlier running backend still had the old schema and dropped the new keys).
 - Not verified live: a TTFT-triggered summary (needs a real slowdown); covered by unit tests only.
+
+## 2026-10-27 — Built-in browser panel (desktop)
+
+- **desktop** — `main/browser-panel.ts`, `main/browser-url.ts` (+ test), `main/ipc.ts`, `preload/index.ts`,
+  `preload/types.ts`, `renderer/index.tsx`.
+- **app** — `browser.ts` (shared types, exported as `@opencode-ai/app/browser`), `context/platform.tsx`,
+  `context/layout.tsx`, `pages/session/browser-panel.tsx`, `pages/session.tsx`,
+  `pages/session/use-session-commands.tsx` (`browser.toggle`, `Mod+Shift+B`, `/browser`),
+  `components/session/session-header.tsx` (titlebar button). 11 i18n keys (English placeholders in the
+  61 other locales).
+- Implemented by a Sonnet subagent from a spec; reviewed here. Added: hide the native view while an app
+  dialog/menu/listbox is open, since native views paint above the DOM.
+
+### Verification
+- `bun typecheck` passes in `packages/desktop` and `packages/app`; `browser-url.test.ts` 10/10; app suite
+  732/732 (i18n parity included); `bun run build` in `packages/desktop` succeeds.
+- **Not verified at runtime.** Launching a second desktop instance for an automated check failed: the
+  user's installed "OpenCode Dev" app was running and holds the single-instance lock for the same app id.

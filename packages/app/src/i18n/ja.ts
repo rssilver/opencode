@@ -1186,4 +1186,15 @@ export const dict = {
 
   "titlebar.update": "アップデート",
   "titlebar.updateVersion": "アップデート {{version}}",
+  "command.browser.toggle": "Toggle browser",
+  "browser.panel.title": "Browser",
+  "browser.tabs": "Browser tabs",
+  "browser.tab.untitled": "New tab",
+  "browser.address.placeholder": "Search or enter address",
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload",
+  "browser.stop": "Stop loading",
+  "browser.newTab": "New tab",
+  "browser.closeTab": "Close tab",
 }

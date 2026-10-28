@@ -1202,4 +1202,15 @@ export const dict = {
   "help.tabs.persistence": "Wenn Sie die App erneut öffnen, sind Ihre Tabs weiterhin geöffnet.",
   "help.tabs.worktrees":
     "Das neue Design unterstützt Git-Worktrees noch nicht. Diese Funktion folgt in Kürze. Wenn Sie das bisherige Layout vorerst weiterverwenden möchten, können Sie in den Einstellungen zwischen den Layouts wechseln. Beachten Sie jedoch, dass das neue Layout in einigen Wochen dauerhaft verwendet wird.",
+  "command.browser.toggle": "Toggle browser",
+  "browser.panel.title": "Browser",
+  "browser.tabs": "Browser tabs",
+  "browser.tab.untitled": "New tab",
+  "browser.address.placeholder": "Search or enter address",
+  "browser.back": "Back",
+  "browser.forward": "Forward",
+  "browser.reload": "Reload",
+  "browser.stop": "Stop loading",
+  "browser.newTab": "New tab",
+  "browser.closeTab": "Close tab",
 } satisfies Partial<Record<Keys, string>>
