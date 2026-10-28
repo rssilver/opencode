@@ -1,0 +1,9 @@
+View the images in a folder (or a single image file) so you can look at them.
+
+Usage:
+- The path parameter is a folder or an image file, absolute or relative to the project directory.
+- Supported formats are PNG, JPEG, GIF and WebP. Files are identified by their content, so unsupported or corrupt files are skipped.
+- Images are sorted by path and returned one page at a time. The default page size is 6 images and the maximum is 12. Use offset to read later pages; the result tells you the offset for the next page.
+- The pattern parameter is an optional glob (for example "screenshot-*.png") to narrow the images. Set recursive to true to include subfolders.
+- If the current model cannot view images and a vision model is configured (vision.model in opencode.json), the images are sent to that model and its description is returned instead. Use the question parameter to say what you want to know about the images.
+- Use this instead of the read tool when you need to look at several images at once.

@@ -9,6 +9,8 @@ import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
+import { ViewImagesTool } from "./view-images"
+import { LLM } from "@/session/llm"
 import { TaskTool } from "./task"
 import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
@@ -101,6 +103,7 @@ const layer = Layer.effect(
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
+    const viewImages = yield* ViewImagesTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -210,6 +213,7 @@ const layer = Layer.effect(
           invalid: Tool.init(invalid),
           shell: Tool.init(shell),
           read: Tool.init(read),
+          viewImages: Tool.init(viewImages),
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -233,6 +237,7 @@ const layer = Layer.effect(
             ...(questionEnabled ? [tool.question] : []),
             tool.shell,
             tool.read,
+            tool.viewImages,
             tool.glob,
             tool.grep,
             tool.edit,
@@ -437,6 +442,7 @@ export const node = LayerNode.make({
     Session.node,
     BackgroundJob.node,
     Provider.node,
+    LLM.node,
     LSP.node,
     Instruction.node,
     FSUtil.node,
