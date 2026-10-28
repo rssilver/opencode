@@ -48,6 +48,13 @@ import { SessionMessage } from "@opencode-ai/schema/session-message"
 const parentTitlePrefix = "New session - "
 const childTitlePrefix = "Child session - "
 
+/** Metadata key holding the last auto-generated title; the title is auto-managed only while it still equals this. */
+export const AUTO_TITLE_KEY = "autoTitle"
+
+export function isAutoTitle(session: Pick<Info, "title" | "metadata">) {
+  return session.metadata?.[AUTO_TITLE_KEY] === session.title
+}
+
 export function isDefaultTitle(title: string) {
   return new RegExp(
     `^(${parentTitlePrefix}|${childTitlePrefix})\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$`,
@@ -425,7 +432,7 @@ export interface Interface {
   readonly fork: (input: { sessionID: SessionID; messageID?: MessageID }) => Effect.Effect<Info, NotFound>
   readonly touch: (sessionID: SessionID) => Effect.Effect<void>
   readonly get: (id: SessionID) => Effect.Effect<Info, NotFound>
-  readonly setTitle: (input: { sessionID: SessionID; title: string }) => Effect.Effect<void>
+  readonly setTitle: (input: { sessionID: SessionID; title: string; auto?: boolean }) => Effect.Effect<void>
   readonly setArchived: (input: { sessionID: SessionID; time?: number }) => Effect.Effect<void>
   readonly setMetadata: (input: typeof SetMetadataInput.Type) => Effect.Effect<void>
   readonly setAgentModel: (input: {
@@ -750,8 +757,18 @@ const layer: Layer.Layer<
       yield* patch(sessionID, { time: { updated: Date.now() } }).pipe(Effect.orDie)
     })
 
-    const setTitle = Effect.fn("Session.setTitle")(function* (input: { sessionID: SessionID; title: string }) {
-      yield* patch(input.sessionID, { title: input.title }).pipe(Effect.orDie)
+    // `auto` records the generated title in metadata so a later rename (which never sets it) is detectable.
+    const setTitle = Effect.fn("Session.setTitle")(function* (input: {
+      sessionID: SessionID
+      title: string
+      auto?: boolean
+    }) {
+      if (!input.auto) return yield* patch(input.sessionID, { title: input.title }).pipe(Effect.orDie)
+      const current = yield* get(input.sessionID).pipe(Effect.orDie)
+      yield* patch(input.sessionID, {
+        title: input.title,
+        metadata: { ...current.metadata, [AUTO_TITLE_KEY]: input.title },
+      }).pipe(Effect.orDie)
     })
 
     const setArchived = Effect.fn("Session.setArchived")(function* (input: { sessionID: SessionID; time?: number }) {

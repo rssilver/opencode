@@ -21,10 +21,10 @@ describe("buildDisplayRows", () => {
   test("keeps each turn's final answer visible and folds its thinking into a per-turn group", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "r0"), // final answer of turn u1 -> visible
       new TimelineRow.UserMessage({ userMessageID: "u2", anchor: true }),
-      new TimelineRow.Thinking({ userMessageID: "u2" }),
+      new TimelineRow.Thinking({ userMessageID: "u2", activity: "thinking", startedAt: 0 }),
       part("a2", "r1"), // final answer of turn u2 -> visible
     ]
     const isResp = anyResponse(isResponse("r0"), isResponse("r1"))
@@ -43,11 +43,11 @@ describe("buildDisplayRows", () => {
   test("a turn keeps its first and latest answers visible; middle answers fold", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "f0"), // first answer of turn u1 -> visible
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "m1"), // middle answer of turn u1 -> folds
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "l2"), // latest answer of turn u1 -> visible
     ]
     const isResp = anyResponse(isResponse("f0"), isResponse("m1"), isResponse("l2"))
@@ -62,7 +62,7 @@ describe("buildDisplayRows", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
       part("a1", "p0"), // persisted middle answer -> stays visible
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "f1"), // final answer -> visible
     ]
     const isResp = anyResponse(isResponse("p0"), isResponse("f1"))
@@ -102,7 +102,7 @@ describe("buildDisplayRows", () => {
   test("TurnGap spacer rows are ignored (no ghost sections)", () => {
     const base = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "r0"), // final answer of turn u1 -> visible
     ]
     const withGap = [new TimelineRow.TurnGap({ userMessageID: "u2" }), ...base]
@@ -118,11 +118,11 @@ describe("buildDisplayRows", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
       part("a1", "exec-u1"), // tool call of turn u1 -> folds, delta 40
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "r0"), // final answer of turn u1 -> visible
       new TimelineRow.UserMessage({ userMessageID: "u2", anchor: true }),
       part("a2", "exec-u2"), // tool call of turn u2 -> folds, delta 90
-      new TimelineRow.Thinking({ userMessageID: "u2" }),
+      new TimelineRow.Thinking({ userMessageID: "u2", activity: "thinking", startedAt: 0 }),
       part("a2", "r1"), // final answer of turn u2 -> visible
     ]
     const isResp = anyResponse(isResponse("r0"), isResponse("r1"))
@@ -142,7 +142,7 @@ describe("buildDisplayRows", () => {
   test("expanding a section reveals its child rows inline while keeping the toggle", () => {
     const rows = [
       new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
-      new TimelineRow.Thinking({ userMessageID: "u1" }),
+      new TimelineRow.Thinking({ userMessageID: "u1", activity: "thinking", startedAt: 0 }),
       part("a1", "r0"), // final answer of turn u1 -> visible
     ]
     const isResp = anyResponse(isResponse("r0"))

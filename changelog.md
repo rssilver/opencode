@@ -373,3 +373,36 @@ per-turn final-answer grouping from them is included here.
   `python -m http.server 8765` from `launch.json`, opened it in the panel, and the model read the listing.
 - Not checked live: auto-verify and memory in the app (loop-level tests only); browser "back" state reported
   `canGoBack: false` after a click navigation (logged in bugs.md).
+
+## 2026-10-27 — Todo list: three new items, sorted by impact and effort
+
+- **docs** — `todo.md`: added "Richer Thinking loader with animation", "Update the session title as the
+  session progresses", and "Sidebar rework (Devin / Claude Code style) and `@` workspace tagging", each with
+  scope notes from the current code (`TimelineThinkingRow`, `SessionPrompt.ensureTitle`, `layout.tsx`).
+- Re-sorted all nine items by impact vs. effort with a summary table at the top; renumbered 1–9 and
+  fixed cross-references between the native-app panel and computer-use items.
+
+## 2026-10-27 — Todo list: six more items, re-sorted to 15
+
+- **docs** — `todo.md`: added "Add models and providers from the app", "Browser logins and bookmarks",
+  "Deep-wiki for a workspace", "Open files the way a person would", "Let a vision model watch videos", and
+  "Skill system that learns tools end-to-end (`!skill`)", each scoped against existing code (custom-provider
+  dialog, `persist:opencode-browser` partition, `file-tabs.tsx`, `src/skill`).
+- Re-sorted all 15 by impact vs. effort; the skill system sits last because it depends on video watching,
+  computer use and the mirrored-app panel. Cross-references renumbered.
+
+## 2026-10-27 — Thinking loader, "Worked for" arrow, auto re-titling, more todos
+
+- **app** — "Worked for" row: chevron now sits right after the label instead of the far right
+  (`message-timeline.tsx`, `WorkingSectionSummary`).
+- **app / session-ui** — Thinking row shows the current activity (reuses existing `ui.sessionTurn.status.*`
+  keys: Running commands, Making edits, Searching the codebase, …), an elapsed timer, and an animated star
+  glyph (reduced-motion safe). Files: `timeline/rows.ts`, `timeline/timeline-row.ts`, `message-timeline.tsx`,
+  `session-turn.css`; tests updated in `working-sections.test.ts`.
+- **opencode** — Sessions re-title at the 3rd real user message and every 8th after, only while the title is
+  still the auto-generated one (`metadata.autoTitle`; user renames stop it). Files: `session/session.ts`,
+  `session/prompt.ts`, new `test/session/retitle.test.ts`.
+- **docs** — `todo.md`: quick-fix note for collapse arrows, #16 UI design refresh, #17 model routing + local capacity planner.
+- Verification: `bun typecheck` passes in packages/app and packages/opencode; app timeline tests 39 pass;
+  opencode retitle/prompt/session tests pass. Not verified live: the glyph's frame cycling (computed style
+  showed only the first frame in a quick check) and a real re-title through the loop.

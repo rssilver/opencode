@@ -76,7 +76,7 @@ import { sessionTitle } from "@/utils/session-title"
 import { scheduleConnectedMeasure } from "./measure"
 import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
-import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
+import { MessageComment, SummaryDiff, ThinkingActivity, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
 import { buildDisplayRows, type DisplayRow } from "./working-sections"
 
@@ -131,12 +131,32 @@ const markBoundaryGesture = (input: {
   }
 }
 
-function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSummaries: boolean }) {
+const THINKING_LABEL = {
+  thinking: "ui.sessionTurn.status.thinking",
+  delegating: "ui.sessionTurn.status.delegating",
+  planning: "ui.sessionTurn.status.planning",
+  searchingCodebase: "ui.sessionTurn.status.searchingCodebase",
+  searchingWeb: "ui.sessionTurn.status.searchingWeb",
+  makingEdits: "ui.sessionTurn.status.makingEdits",
+  runningCommands: "ui.sessionTurn.status.runningCommands",
+} as const
+
+function TimelineThinkingRow(props: {
+  reasoningHeading?: string
+  showReasoningSummaries: boolean
+  activity: ThinkingActivity
+  startedAt: number
+}) {
   const language = useLanguage()
+  const [now, setNow] = createSignal(Date.now())
+  const timer = setInterval(() => setNow(Date.now()), 1000)
+  onCleanup(() => clearInterval(timer))
 
   return (
     <div data-slot="session-turn-thinking">
-      <TextShimmer text={language.t("ui.sessionTurn.status.thinking")} />
+      <span data-slot="session-turn-thinking-glyph" aria-hidden="true" />
+      <TextShimmer text={language.t(THINKING_LABEL[props.activity])} />
+      <span data-slot="session-turn-thinking-elapsed">{formatCompactDuration(now() - props.startedAt)}</span>
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
       </Show>
@@ -174,7 +194,7 @@ function WorkingSectionSummary(props: {
         <button
           type="button"
           aria-expanded={props.expanded()}
-          class="flex items-center justify-between gap-2 w-full max-w-full text-left pr-1 pl-0.5 text-12-medium leading-4 text-text-weak transition-colors hover:text-text-strong cursor-pointer"
+          class="inline-flex items-center gap-1 max-w-full text-left pr-1 pl-0.5 text-12-medium leading-4 text-text-weak transition-colors hover:text-text-strong cursor-pointer"
           onClick={props.onToggle}
         >
           <span data-slot="session-turn-working-section-label">{label()}</span>
@@ -1319,6 +1339,8 @@ export function MessageTimeline(props: {
               <TimelineThinkingRow
                 reasoningHeading={thinkingRow().reasoningHeading}
                 showReasoningSummaries={settings.general.showReasoningSummaries()}
+                activity={thinkingRow().activity}
+                startedAt={thinkingRow().startedAt}
               />
             </div>
           </TimelineRowFrame>

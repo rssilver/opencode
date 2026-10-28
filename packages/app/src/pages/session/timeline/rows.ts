@@ -2,11 +2,29 @@ import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import { AssistantMessage, Part, SessionStatus, UserMessage } from "@opencode-ai/sdk/v2"
 import { groupParts, renderable, type PartGroup } from "@opencode-ai/session-ui/message-part"
-import { TimelineRow, type SummaryDiff } from "./timeline-row"
+import { TimelineRow, type SummaryDiff, type ThinkingActivity } from "./timeline-row"
 import { uniqueSummaryDiffs } from "./summary-diffs"
 import { compareMessages } from "@/utils/session-message"
 
-export { TimelineRow, type SummaryDiff } from "./timeline-row"
+export { TimelineRow, type SummaryDiff, type ThinkingActivity } from "./timeline-row"
+
+const TOOL_ACTIVITY: Record<string, ThinkingActivity> = {
+  task: "delegating",
+  todowrite: "planning",
+  read: "searchingCodebase",
+  glob: "searchingCodebase",
+  grep: "searchingCodebase",
+  list: "searchingCodebase",
+  codesearch: "searchingCodebase",
+  webfetch: "searchingWeb",
+  websearch: "searchingWeb",
+  edit: "makingEdits",
+  write: "makingEdits",
+  multiedit: "makingEdits",
+  patch: "makingEdits",
+  apply_patch: "makingEdits",
+  bash: "runningCommands",
+}
 
 export type TimelineRowMap = {
   TurnGap: { userMessageID: string }
@@ -26,7 +44,7 @@ export type TimelineRowMap = {
     group: PartGroup
     previousAssistantPart: boolean
   }
-  Thinking: { userMessageID: string; reasoningHeading?: string }
+  Thinking: { userMessageID: string; reasoningHeading?: string; activity: ThinkingActivity; startedAt: number }
   Retry: { userMessageID: string }
   DiffSummary: { userMessageID: string; diffs: SummaryDiff[] }
   Error: { userMessageID: string; text: string }
@@ -191,8 +209,8 @@ export namespace Timeline {
     })
 
     if (isActive && status === "busy" && !error && (showReasoning ? assistantPartRefs.length === 0 : true)) {
-      const heading = assistantMessages
-        .flatMap((message) => getMessageParts(message.id))
+      const parts = assistantMessages.flatMap((message) => getMessageParts(message.id))
+      const heading = parts
         .map((part) => (part.type === "reasoning" && part.text ? reasoningHeading(part.text) : undefined))
         .find((value): value is string => !!value)
 
@@ -200,6 +218,8 @@ export namespace Timeline {
         new TimelineRow.Thinking({
           userMessageID: userMessage.id,
           reasoningHeading: heading,
+          activity: thinkingActivity(parts),
+          startedAt: userMessage.time.created,
         }),
       )
     }
@@ -229,6 +249,15 @@ export namespace Timeline {
     }
 
     return rows
+  }
+
+  // What the turn is doing right now, from the newest tool call that hasn't finished.
+  function thinkingActivity(parts: Part[]): ThinkingActivity {
+    const tool = parts.findLast(
+      (part) => part.type === "tool" && (part.state.status === "running" || part.state.status === "pending"),
+    )
+    if (!tool || tool.type !== "tool") return "thinking"
+    return TOOL_ACTIVITY[tool.tool] ?? "thinking"
   }
 
   function reasoningHeading(text: string) {

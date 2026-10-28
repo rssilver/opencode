@@ -4,6 +4,15 @@ import { Data, Equal } from "effect"
 
 export type SummaryDiff = SnapshotFileDiff & { file: string }
 
+export type ThinkingActivity =
+  | "thinking"
+  | "delegating"
+  | "planning"
+  | "searchingCodebase"
+  | "searchingWeb"
+  | "makingEdits"
+  | "runningCommands"
+
 export namespace TimelineRow {
   export class TurnGap extends Data.TaggedClass("TurnGap")<{
     userMessageID: string
@@ -27,6 +36,8 @@ export namespace TimelineRow {
   export class Thinking extends Data.TaggedClass("Thinking")<{
     userMessageID: string
     reasoningHeading?: string
+    activity: ThinkingActivity
+    startedAt: number
   }> {}
   export class DiffSummary extends Data.TaggedClass("DiffSummary")<{
     userMessageID: string

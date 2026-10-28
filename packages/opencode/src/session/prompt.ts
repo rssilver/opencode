@@ -94,6 +94,35 @@ function formatMcpResourceBytes(value: number) {
   return `${Math.ceil(value / (1024 * 1024))} MB`
 }
 
+// Re-title when the real user message count reaches 3, then every 8 after (11, 19, ...).
+export function retitleDue(realUserCount: number) {
+  return realUserCount >= 3 && (realUserCount - 3) % 8 === 0
+}
+
+export function sameTitle(a: string, b: string) {
+  return a.trim().toLowerCase() === b.trim().toLowerCase()
+}
+
+export function retitlePrompt(current: string, users: SessionV1.WithParts[]) {
+  const recent = users
+    .slice(-3)
+    .map((m) =>
+      m.parts
+        .flatMap((p) => (p.type === "text" && !p.synthetic ? [p.text] : []))
+        .join("\n")
+        .slice(0, 400),
+    )
+    .filter((text) => text.length > 0)
+  return [
+    `Current title: ${current}`,
+    "",
+    "Most recent user messages:",
+    ...recent.map((text) => `- ${text}`),
+    "",
+    "Keep the current title unless the focus of the conversation has clearly changed. Reply with only the title.",
+  ].join("\n")
+}
+
 function isOrphanedInterruptedTool(part: SessionV1.ToolPart) {
   // cleanup() marks abandoned tool_use blocks this way after retries/aborts.
   // They are not pending work and must not trigger an assistant-prefill request.
@@ -198,13 +227,16 @@ const layer = Layer.effect(
       modelID: ModelV2.ID
     }) {
       if (input.session.parentID) return
-      if (!Session.isDefaultTitle(input.session.title)) return
 
       const real = (m: SessionV1.WithParts) =>
         m.info.role === "user" && !m.parts.every((p) => "synthetic" in p && p.synthetic)
       const idx = input.history.findIndex(real)
       if (idx === -1) return
-      if (input.history.filter(real).length !== 1) return
+      const realCount = input.history.filter(real).length
+      const initial = Session.isDefaultTitle(input.session.title) && realCount === 1
+      // Only refresh titles this path generated; a user rename no longer matches the recorded auto title.
+      const refresh = !initial && retitleDue(realCount) && Session.isAutoTitle(input.session)
+      if (!initial && !refresh) return
 
       const context = input.history.slice(0, idx + 1)
       const firstUser = context[idx]
@@ -220,9 +252,11 @@ const layer = Layer.effect(
         ? yield* provider.getModel(ag.model.providerID, ag.model.modelID)
         : ((yield* provider.getSmallModel(input.providerID)) ??
           (yield* provider.getModel(input.providerID, input.modelID)))
-      const msgs = onlySubtasks
-        ? [{ role: "user" as const, content: subtasks.map((p) => p.prompt).join("\n") }]
-        : yield* MessageV2.toModelMessagesEffect(context, mdl)
+      const msgs = refresh
+        ? [{ role: "user" as const, content: retitlePrompt(input.session.title, input.history.filter(real)) }]
+        : onlySubtasks
+          ? [{ role: "user" as const, content: subtasks.map((p) => p.prompt).join("\n") }]
+          : yield* MessageV2.toModelMessagesEffect(context, mdl)
       const text = yield* llm
         .stream({
           agent: ag,
@@ -233,7 +267,9 @@ const layer = Layer.effect(
           model: mdl,
           sessionID: input.session.id,
           retries: 2,
-          messages: [{ role: "user", content: "Generate a title for this conversation:\n" }, ...msgs],
+          messages: refresh
+            ? msgs
+            : [{ role: "user", content: "Generate a title for this conversation:\n" }, ...msgs],
         })
         .pipe(
           Stream.filter(LLMEvent.is.textDelta),
@@ -248,8 +284,14 @@ const layer = Layer.effect(
         .find((line) => line.length > 0)
       if (!cleaned) return
       const t = cleaned.length > 100 ? cleaned.substring(0, 97) + "..." : cleaned
+      if (refresh) {
+        if (sameTitle(t, input.session.title)) return
+        // The model call is slow; re-read so a rename made meanwhile is not overwritten.
+        const latest = yield* sessions.get(input.session.id).pipe(Effect.orDie)
+        if (!Session.isAutoTitle(latest)) return
+      }
       yield* sessions
-        .setTitle({ sessionID: input.session.id, title: t })
+        .setTitle({ sessionID: input.session.id, title: t, auto: true })
         .pipe(Effect.catchCause((cause) => Effect.logError("failed to generate title", { error: Cause.squash(cause) })))
     })
 
