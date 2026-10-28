@@ -85,6 +85,30 @@ export const Info = Schema.Struct({
       }),
     }),
   ).annotate({ description: "Image understanding settings" }),
+  verify: Schema.optional(
+    Schema.Struct({
+      command: Schema.optional(Schema.String).annotate({
+        description:
+          "Shell command run in the project directory after the agent finishes a turn that edited files. A non-zero exit sends the output back to the agent to fix",
+      }),
+      timeout_ms: Schema.optional(NonNegativeInt).annotate({
+        description: "Maximum time the verify command may run before it is killed. Defaults to 120000",
+      }),
+      max_attempts: Schema.optional(NonNegativeInt).annotate({
+        description: "Maximum failed verifications per user message before giving up. Defaults to 2",
+      }),
+      enabled: Schema.optional(Schema.Boolean).annotate({
+        description: "Set to false to disable verification. Defaults to true when a command is set",
+      }),
+    }),
+  ).annotate({ description: "Automatic verification after the agent edits files" }),
+  memory: Schema.optional(
+    Schema.Struct({
+      enabled: Schema.optional(Schema.Boolean).annotate({
+        description: "Enable the memory tool and loading of .opencode/memory.md into context. Defaults to true",
+      }),
+    }),
+  ).annotate({ description: "Project memory settings" }),
   default_agent: Schema.optional(Schema.String).annotate({
     description:
       "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",

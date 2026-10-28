@@ -186,6 +186,7 @@ export const dict = {
   "ui.message.interrupted": "Қатъ карда шуд",
   "ui.message.queued": "Дар навбат",
   "ui.message.attachment.alt": "замима",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Нобуд",
   "ui.patch.action.created": "Эҷод карда шуд",
   "ui.patch.action.moved": "кӯчонида шуд",

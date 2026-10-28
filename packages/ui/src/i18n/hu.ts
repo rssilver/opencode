@@ -188,6 +188,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Megszakított",
   "ui.message.queued": "Sorban",
   "ui.message.attachment.alt": "mellékletet",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Törölve",
   "ui.patch.action.created": "Létrehozva",
   "ui.patch.action.moved": "Áthelyezve",

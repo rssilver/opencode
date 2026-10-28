@@ -187,6 +187,7 @@ export const dict = {
   "ui.message.interrupted": "រំខាន",
   "ui.message.queued": "តម្រង់ជួរ\nឯកសារភ្ជាប់",
   "ui.message.attachment.alt": "ឯកសារភ្ជាប់",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "បានលុប",
   "ui.patch.action.created": "បានបង្កើត",
   "ui.patch.action.moved": "បានផ្លាស់ទី",

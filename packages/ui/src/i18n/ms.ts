@@ -186,6 +186,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Terganggu",
   "ui.message.queued": "Dalam giliran",
   "ui.message.attachment.alt": "lampiran",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Dihapus",
   "ui.patch.action.created": "Dicipta",
   "ui.patch.action.moved": "Dialihkan",

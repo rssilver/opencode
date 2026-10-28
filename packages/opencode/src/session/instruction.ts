@@ -11,6 +11,7 @@ import { Flag } from "@opencode-ai/core/flag/flag"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { withTransientReadRetry } from "@/util/effect-http-client"
 import { Global } from "@opencode-ai/core/global"
+import { ProjectMemory } from "@/memory/memory"
 import type { MessageV2 } from "./message-v2"
 import type { MessageID } from "./schema"
 
@@ -162,9 +163,16 @@ const layer: Layer.Layer<
       const files = yield* Effect.forEach(Array.from(paths), read, { concurrency: 8 })
       const remote = yield* Effect.forEach(urls, fetch, { concurrency: 4 })
 
+      const ctx = yield* InstanceState.context
+      const memory =
+        config.memory?.enabled === false || Flag.OPENCODE_DISABLE_PROJECT_CONFIG
+          ? undefined
+          : ProjectMemory.render(ProjectMemory.parse(yield* read(ProjectMemory.file(ctx))))
+
       return [
         ...Array.from(paths).flatMap((item, i) => (files[i] ? [`Instructions from: ${item}\n${files[i]}`] : [])),
         ...urls.flatMap((item, i) => (remote[i] ? [`Instructions from: ${item}\n${remote[i]}`] : [])),
+        ...(memory ? [memory] : []),
       ]
     })
 

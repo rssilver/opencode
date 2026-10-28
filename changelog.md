@@ -342,3 +342,34 @@ per-turn final-answer grouping from them is included here.
 - Live in the app dev server with LM Studio: header shows "7%"; tooltip read 13,303 / 200,000 (7%),
   summarizes at 192,000 (96%, = context − max output, as on the server), "At context limit", TTFT 0.6s
   (baseline 0.5s), 1.1× baseline, sparkline drawn.
+
+## 2026-10-27 — Agent browser tools, dev-server previews, chat screenshots, auto-verify, project memory
+
+- **desktop** — `src/main/agent-tools/` (new): local MCP server in the Electron main process (127.0.0.1,
+  random port, bearer token, Host pinned, `Origin` rejected, POST `/mcp` only, 1MB body cap) injected into
+  the local sidecar via `OPENCODE_CONFIG_CONTENT` as MCP server `desktop`. Tools: `browser_open/tabs/read/
+  click/type/scroll/screenshot/back/forward/close_tab` (http/https only, isolated-world page scripts, no
+  arbitrary JS) and `preview_list/start/logs/stop` driven by a project's `.opencode/launch.json`.
+  `preview_start` is set to **ask** permission by default (`permission.desktop_preview_start`, an explicit
+  user setting wins). `browser-panel.ts`, `index.ts`, `server.ts`, preload, `@opencode-ai/app/browser` and
+  `pages/session.tsx` wire the "open panel" request. Adds `@modelcontextprotocol/sdk` to desktop.
+- **session-ui** — image attachments of completed tool parts render as thumbnails under the tool header
+  (also when collapsed); click opens the existing image preview. Fixed after the live check: thumbnails
+  were 0px wide (lazy image inside a max-width-only button) — now fixed width, eager load. 1 ui i18n key.
+- **opencode / core** — `verify: { command, timeout_ms, max_attempts, enabled }`: after a turn that changed
+  files, run the command; on failure feed the output back for a fix (default 2 attempts); synthetic notes
+  show pass/fail (`session/verify.ts`, `session/prompt.ts`). `memory` tool + `.opencode/memory.md` loaded
+  into the system context, `memory: { enabled }` (`memory/memory.ts`, `tool/memory.ts`, `session/instruction.ts`).
+- Built by Sonnet subagents from specs; reviewed here.
+
+### Verification
+- `bun typecheck` passes in opencode, core, desktop, session-ui, app. Desktop agent-tools tests 22/22
+  (incl. the new permission default); subagent runs: desktop 31/31, app 743/743, session-ui 84/84, opencode
+  verify/memory/instruction/prompt/registry tests passing (compaction timing flake as before).
+- Live in the rebuilt desktop app (user's OpenCode Dev closed) with LM Studio: backend reported MCP
+  `desktop: connected`; the model opened example.com, read it, clicked "Learn more", took a captioned
+  screenshot (real IANA page) and answered correctly; the panel opened by itself. The screenshot thumbnail
+  rendered in chat (358px) and opened full size. `preview_start` asked for permission, started
+  `python -m http.server 8765` from `launch.json`, opened it in the panel, and the model read the listing.
+- Not checked live: auto-verify and memory in the app (loop-level tests only); browser "back" state reported
+  `canGoBack: false` after a click navigation (logged in bugs.md).

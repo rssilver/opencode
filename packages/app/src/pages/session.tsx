@@ -2007,6 +2007,12 @@ export default function Page() {
     makeEventListener(document, "keydown", handleKeyDown)
   })
 
+  // The agent's browser tools ask the desktop app to reveal the panel when they open a tab.
+  onMount(() => {
+    const stop = platform.browser?.onOpenRequest(() => view().browser.open())
+    if (stop) onCleanup(stop)
+  })
+
   onCleanup(() => {
     if (reviewFrame !== undefined) cancelAnimationFrame(reviewFrame)
     if (todoFrame !== undefined) cancelAnimationFrame(todoFrame)

@@ -60,3 +60,9 @@ before the file is opened, which breaks on a temp folder whose real path has upp
 **Status:** open, timing flake. Passes when run alone (3/3), fails with a 5 s timeout (≈5.4 s) when run in the
 same `bun test` invocation as other test files. Not yet compared against `dev`, so it may or may not predate
 this branch. Fix options: raise that test's timeout, or find what makes it slow when other files run first.
+
+## Browser panel reports `canGoBack: false` after a link click
+
+**Status:** open, minor. After the agent clicked a link (example.com → iana.org) in the same tab, the panel
+state still had `canGoBack: false`. Likely `sync()` runs on `did-navigate` before Electron's navigation
+history updates; re-sync on `did-stop-loading` / `did-finish-load` or read history lazily.

@@ -166,6 +166,7 @@ export const dict = {
   "ui.message.interrupted": "중단됨",
   "ui.message.queued": "대기열에 추가됨",
   "ui.message.attachment.alt": "첨부 파일",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "삭제됨",
   "ui.patch.action.created": "생성됨",

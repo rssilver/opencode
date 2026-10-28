@@ -10,6 +10,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ViewImagesTool } from "./view-images"
+import { MemoryTool } from "./memory"
 import { LLM } from "@/session/llm"
 import { TaskTool } from "./task"
 import { Database } from "@opencode-ai/core/database/database"
@@ -104,6 +105,7 @@ const layer = Layer.effect(
     const task = yield* TaskTool
     const read = yield* ReadTool
     const viewImages = yield* ViewImagesTool
+    const memory = yield* MemoryTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
@@ -206,7 +208,7 @@ const layer = Layer.effect(
           }
         }
 
-        yield* config.get()
+        const memoryEnabled = (yield* config.get()).memory?.enabled !== false
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
 
         const tool = yield* Effect.all({
@@ -214,6 +216,7 @@ const layer = Layer.effect(
           shell: Tool.init(shell),
           read: Tool.init(read),
           viewImages: Tool.init(viewImages),
+          memory: Tool.init(memory),
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
@@ -238,6 +241,7 @@ const layer = Layer.effect(
             tool.shell,
             tool.read,
             tool.viewImages,
+            ...(memoryEnabled ? [tool.memory] : []),
             tool.glob,
             tool.grep,
             tool.edit,

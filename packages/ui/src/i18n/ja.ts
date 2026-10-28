@@ -191,6 +191,7 @@ export const dict = {
   "ui.message.interrupted": "中断",
   "ui.message.queued": "待機中",
   "ui.message.attachment.alt": "添付ファイル",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "削除済み",
   "ui.patch.action.created": "作成済み",

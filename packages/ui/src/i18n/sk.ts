@@ -194,6 +194,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Prerušené",
   "ui.message.queued": "Zaradené do fronty",
   "ui.message.attachment.alt": "príloha",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Odstránené",
   "ui.patch.action.created": "Vytvorené",
   "ui.patch.action.moved": "Presunuté",

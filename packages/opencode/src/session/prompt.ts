@@ -55,6 +55,7 @@ import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import { SessionReminders } from "./reminders"
 import { SessionTools } from "./tools"
+import { SessionVerify } from "./verify"
 import { LLMEvent } from "@opencode-ai/llm"
 
 // @ts-ignore
@@ -1078,6 +1079,112 @@ const layer = Layer.effect(
       throw new Error("Impossible")
     })
 
+    // Runs the configured verify command once the agent is about to finish. Returns "continue" when a failure was
+    // handed back to the agent as a synthetic user message, otherwise "done".
+    const verify = Effect.fn("SessionPrompt.verify")(function* (input: {
+      session: Session.Info
+      messages: SessionV1.WithParts[]
+      user: SessionV1.User
+      assistant: SessionV1.Assistant
+    }) {
+      const cfg = yield* config.get()
+      const settings = SessionVerify.settings(cfg.verify)
+      if (!settings) return "done" as const
+
+      const events = input.messages.flatMap((msg): SessionVerify.Event[] => {
+        if (msg.info.role === "user") {
+          const real = !msg.parts.every((part) => "synthetic" in part && part.synthetic)
+          return real ? [{ kind: "user" }] : []
+        }
+        return msg.parts.flatMap((part): SessionVerify.Event[] => {
+          if (part.type === "tool")
+            return [{ kind: "tool", tool: part.tool, completed: part.state.status === "completed" }]
+          const mark = part.type === "text" ? part.metadata?.[SessionVerify.MARKER] : undefined
+          return typeof mark?.passed === "boolean" ? [{ kind: "verify", passed: mark.passed }] : []
+        })
+      })
+      const decision = SessionVerify.decide({
+        events,
+        maxAttempts: settings.maxAttempts,
+        subagent: !!input.session.parentID,
+        aborted: !!input.assistant.error,
+      })
+      if (!decision.run) return "done" as const
+
+      const ctx = yield* InstanceState.context
+      const sh = Shell.preferred(cfg.shell)
+      let output = ""
+      const finished = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const handle = yield* spawner.spawn(
+            ChildProcess.make(sh, Shell.args(sh, settings.command, ctx.directory), {
+              cwd: ctx.directory,
+              extendEnv: true,
+              env: { TERM: "dumb" },
+              stdin: "ignore",
+              forceKillAfter: "3 seconds",
+            }),
+          )
+          yield* Stream.runForEach(Stream.decodeText(handle.all), (chunk) =>
+            Effect.sync(() => {
+              output = (output + chunk).slice(-SessionVerify.MAX_OUTPUT_CHARS * 2)
+            }),
+          )
+          return Number(yield* handle.exitCode)
+        }),
+      ).pipe(
+        Effect.timeoutOption(settings.timeoutMs),
+        Effect.map((exit) => (Option.isSome(exit) ? exit.value : null)),
+        Effect.catch((error) => {
+          output += `
+${String(error)}`
+          return Effect.succeed(1)
+        }),
+      )
+      const passed = finished === 0
+
+      const note = (text: string, metadata: Record<string, unknown>, messageID: MessageID, synthetic = true) =>
+        sessions.updatePart({
+          id: PartID.ascending(),
+          messageID,
+          sessionID: input.session.id,
+          type: "text",
+          synthetic,
+          text,
+          metadata,
+          time: { start: Date.now(), end: Date.now() },
+        })
+
+      yield* note(
+        passed
+          ? SessionVerify.passedNote(settings.command)
+          : SessionVerify.failedNote({
+              command: settings.command,
+              attempt: decision.attempt,
+              maxAttempts: settings.maxAttempts,
+              exitCode: finished,
+            }),
+        { [SessionVerify.MARKER]: { passed } },
+        input.assistant.id,
+      )
+      if (passed || decision.attempt >= settings.maxAttempts) return "done" as const
+
+      const fix = yield* sessions.updateMessage({
+        id: MessageID.ascending(),
+        role: "user",
+        sessionID: input.session.id,
+        time: { created: Date.now() },
+        agent: input.user.agent,
+        model: input.user.model,
+      })
+      yield* note(
+        SessionVerify.fixPrompt({ command: settings.command, exitCode: finished, output }),
+        { verify_fix: { attempt: decision.attempt } },
+        fix.id,
+      )
+      return "continue" as const
+    })
+
     const runLoop: (sessionID: SessionID) => Effect.Effect<SessionV1.WithParts> = Effect.fn("SessionPrompt.run")(
       function* (sessionID: SessionID) {
         const ctx = yield* InstanceState.context
@@ -1125,6 +1232,8 @@ const layer = Layer.effect(
                 callID: orphan.callID,
               })
             }
+            if ((yield* verify({ session, messages: msgs, user: lastUser, assistant: lastAssistant })) === "continue")
+              continue
             yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
             break
           }

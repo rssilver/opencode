@@ -49,6 +49,8 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
+import { startAgentToolsServer, type AgentToolsServer } from "./agent-tools/server"
+import { desktopMcpEntry, mergeConfigContent } from "./agent-tools/sidecar-config"
 
 const APP_NAMES: Record<string, string> = {
   dev: "OpenCode Dev",
@@ -164,7 +166,11 @@ const main = Effect.gen(function* () {
       },
     },
   )
+  let agentTools: AgentToolsServer | undefined
   const stopSidecars = async () => {
+    const tools = agentTools
+    agentTools = undefined
+    void tools?.stop()
     await killSidecar()
     wslServers.stopAll()
   }
@@ -374,10 +380,28 @@ const main = Effect.gen(function* () {
     const url = `http://${hostname}:${port}`
     const password = randomUUID()
 
+    // Local sidecar only: it reaches the browser panel and previews through this MCP server.
+    agentTools = yield* Effect.promise(() => startAgentToolsServer()).pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          logger.error("agent tools server failed to start", String(error))
+          return undefined
+        }),
+      ),
+    )
+
     logger.log("spawning sidecar", { url })
     const { listener, health } = yield* Effect.promise(() =>
       spawnLocalServer(hostname, port, password, {
         userDataPath: app.getPath("userData"),
+        env: agentTools
+          ? {
+              OPENCODE_CONFIG_CONTENT: mergeConfigContent(
+                process.env.OPENCODE_CONFIG_CONTENT,
+                desktopMcpEntry(agentTools.url, agentTools.token),
+              ),
+            }
+          : undefined,
         onStdout: (message) => writeLog("server", "stdout", { message }),
         onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
         onExit: (code) => writeLog("utility", "sidecar exited", { code }, "warn"),

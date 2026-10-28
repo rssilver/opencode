@@ -19,6 +19,11 @@ const api: ElectronAPI = {
       ipcRenderer.on("browser-state", handler)
       return () => ipcRenderer.removeListener("browser-state", handler)
     },
+    onOpenRequest: (cb) => {
+      const handler = () => cb()
+      ipcRenderer.on("browser-open-request", handler)
+      return () => ipcRenderer.removeListener("browser-open-request", handler)
+    },
     createTab: (url) => ipcRenderer.invoke("browser-create-tab", url),
     closeTab: (id) => ipcRenderer.invoke("browser-close-tab", id),
     selectTab: (id) => ipcRenderer.invoke("browser-select-tab", id),

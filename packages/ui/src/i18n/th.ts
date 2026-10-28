@@ -192,6 +192,7 @@ export const dict = {
   "ui.message.interrupted": "ถูกขัดจังหวะ",
   "ui.message.queued": "อยู่ในคิว",
   "ui.message.attachment.alt": "ไฟล์แนบ",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "ลบ",
   "ui.patch.action.created": "สร้าง",

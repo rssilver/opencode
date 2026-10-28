@@ -171,6 +171,7 @@ export const dict = {
   "ui.message.interrupted": "Afbrudt",
   "ui.message.queued": "I kø",
   "ui.message.attachment.alt": "vedhæftning",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "Slettet",
   "ui.patch.action.created": "Oprettet",

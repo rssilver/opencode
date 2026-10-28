@@ -5,7 +5,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
-import { expect } from "bun:test"
+import { describe, expect } from "bun:test"
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, Layer } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -2468,3 +2468,58 @@ noLLMServer.instance(
     }),
   30_000,
 )
+
+describe("verify after edits", () => {
+  const run = Effect.fn("test.verifyRun")(function* (command: string, writes: number) {
+    const { dir, llm } = yield* useServerConfig((url) => ({
+      ...providerCfg(url),
+      verify: { command, max_attempts: 2 },
+    }))
+    const prompt = yield* SessionPrompt.Service
+    const sessions = yield* Session.Service
+    const session = yield* sessions.create({
+      title: "Verify",
+      permission: [{ permission: "*", pattern: "*", action: "allow" }],
+    })
+    yield* prompt.prompt({
+      sessionID: session.id,
+      agent: "build",
+      noReply: true,
+      parts: [{ type: "text", text: "write a file" }],
+    })
+    for (let i = 0; i < writes; i++) {
+      yield* llm.tool("write", { filePath: path.join(dir, `out-${i}.txt`), content: `v${i}` })
+      yield* llm.text(`done ${i}`)
+    }
+    yield* prompt.loop({ sessionID: session.id })
+    const msgs = yield* MessageV2.filterCompactedEffect(session.id)
+    return {
+      calls: yield* llm.calls,
+      texts: msgs.flatMap((msg) => msg.parts.flatMap((part) => (part.type === "text" ? [part] : []))),
+      users: msgs.filter((msg) => msg.info.role === "user").length,
+    }
+  })
+
+  it.instance("records a note and finishes when the command passes", () =>
+    Effect.gen(function* () {
+      const result = yield* run('bun -e "console.log(1)"', 1)
+      expect(result.calls).toBe(2)
+      expect(result.users).toBe(1)
+      expect(result.texts.some((part) => part.synthetic && part.text.startsWith("Verify passed: "))).toBe(true)
+    }),
+  )
+
+  it.instance("feeds failures back to the agent and stops after max_attempts", () =>
+    Effect.gen(function* () {
+      const result = yield* run("bun -e \"console.log('boom output'); process.exit(3)\"", 2)
+      expect(result.calls).toBe(4)
+      expect(result.users).toBe(2)
+      const fix = result.texts.find((part) => part.synthetic && part.text.includes("Automatic verification failed"))
+      expect(fix?.text).toContain("exited with code 3")
+      expect(fix?.text).toContain("boom output")
+      const notes = result.texts.filter((part) => part.synthetic && part.text.startsWith("Verify failed"))
+      expect(notes).toHaveLength(2)
+      expect(notes[1].text).toContain("still fails")
+    }),
+  )
+})

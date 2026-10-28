@@ -186,6 +186,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Bị gián đoạn",
   "ui.message.queued": "Đã xếp hàng",
   "ui.message.attachment.alt": "tệp đính kèm",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Đã xóa",
   "ui.patch.action.created": "Đã tạo",
   "ui.patch.action.moved": "Đã di chuyển",

@@ -187,6 +187,7 @@ export const dict = {
   "ui.message.interrupted": "ပြတ်တောက်သွားသည်။",
   "ui.message.queued": "တန်းစီထားသည်။",
   "ui.message.attachment.alt": "တွယ်တာမှု",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "ဖျက်ထားသည်။",
   "ui.patch.action.created": "ဖန်တီးထားသည်။",
   "ui.patch.action.moved": "ရွှေ့ထားသည်။",

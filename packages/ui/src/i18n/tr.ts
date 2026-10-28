@@ -198,6 +198,7 @@ export const dict = {
   "ui.message.interrupted": "Kesildi",
   "ui.message.queued": "Sırada",
   "ui.message.attachment.alt": "ek",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "Silindi",
   "ui.patch.action.created": "Oluşturuldu",

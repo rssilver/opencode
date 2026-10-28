@@ -186,6 +186,7 @@ export const dict = {
   "ui.message.interrupted": "Прекъснат",
   "ui.message.queued": "На опашка",
   "ui.message.attachment.alt": "прикачен файл",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Изтрито",
   "ui.patch.action.created": "Създаден",
   "ui.patch.action.moved": "Преместен",

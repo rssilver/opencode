@@ -208,6 +208,7 @@ export const dict = {
   "ui.message.interrupted": "تمت المقاطعة",
   "ui.message.queued": "في قائمة الانتظار",
   "ui.message.attachment.alt": "مرفق",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "محذوف",
   "ui.patch.action.created": "تم الإنشاء",

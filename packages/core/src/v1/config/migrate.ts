@@ -19,6 +19,8 @@ const keys = new Set([
   "enabled_providers",
   "small_model",
   "vision",
+  "verify",
+  "memory",
   "mode",
   "agent",
   "provider",

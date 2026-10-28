@@ -1547,6 +1547,40 @@ function ToolFileAccordion(props: { path: string; actions?: JSX.Element; childre
   )
 }
 
+/** Image attachments of a completed tool call (e.g. a browser screenshot), shown even when the tool is collapsed. */
+function ToolImages(props: { part: ToolPart; input: Record<string, any> }) {
+  const i18n = useI18n()
+  const dialog = useDialog()
+  const images = createMemo(() => {
+    const state = props.part.state
+    if (state.status !== "completed") return []
+    return (state.attachments ?? []).filter((file) => file.mime.startsWith("image/"))
+  })
+  const alt = () => {
+    const caption = props.input.caption
+    return typeof caption === "string" && caption.trim() ? caption.trim() : i18n.t("ui.messagePart.toolImage.alt")
+  }
+
+  return (
+    <Show when={images().length > 0}>
+      <div data-slot="tool-part-images">
+        <For each={images()}>
+          {(file) => (
+            <button
+              type="button"
+              data-slot="tool-part-image"
+              aria-label={alt()}
+              onClick={() => dialog.show(() => <ImagePreview src={file.url} alt={alt()} />)}
+            >
+              <img src={file.url} alt={alt()} decoding="async" />
+            </button>
+          )}
+        </For>
+      </div>
+    </Show>
+  )
+}
+
 PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const data = useData()
   const i18n = useI18n()
@@ -1643,6 +1677,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             />
           </Match>
         </Switch>
+        <ToolImages part={part()} input={input()} />
       </div>
     </Show>
   )

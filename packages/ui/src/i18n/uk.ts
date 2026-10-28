@@ -215,6 +215,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Перервано",
   "ui.message.queued": "У черзі",
   "ui.message.attachment.alt": "вкладення",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "Видалено",
   "ui.patch.action.created": "Створено",

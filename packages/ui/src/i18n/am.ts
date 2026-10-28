@@ -185,6 +185,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "የተቋረጠ",
   "ui.message.queued": "ወረፋ ላይ",
   "ui.message.attachment.alt": "አባሪ",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "የተሰረዘ",
   "ui.patch.action.created": "የተፈጠረ",
   "ui.patch.action.moved": "ተንቀሳቅሷል",

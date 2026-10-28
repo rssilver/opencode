@@ -1,0 +1,15 @@
+Saves durable, project-specific facts to .opencode/memory.md so they are loaded into context in every future session in this project.
+
+Save things that will still be true and useful later:
+- build, test, lint and run commands that are not obvious
+- conventions, architecture decisions and gotchas
+- user preferences about how to work in this project
+
+Do not save transient task state (current progress, todo items, one-off debugging notes) or anything already in AGENTS.md.
+
+Actions:
+- add: save one concise fact in `text` (one line, at most 500 characters; exact duplicates are ignored)
+- list: show all saved memories with their 1-based numbers
+- remove: delete a memory by `index` (1-based, from list) or by its exact `text`
+
+Writing asks for the same permission as editing files.

@@ -24,6 +24,8 @@ export type BrowserPlatform = {
   getState(): Promise<BrowserState>
   /** Subscribe to tab state changes; returns an unsubscribe function. */
   subscribe(cb: (state: BrowserState) => void): () => void
+  /** Subscribe to requests (from the agent) to show the browser panel; returns an unsubscribe function. */
+  onOpenRequest(cb: () => void): () => void
   createTab(url?: string): Promise<string | undefined>
   closeTab(id: string): Promise<void>
   selectTab(id: string): Promise<void>

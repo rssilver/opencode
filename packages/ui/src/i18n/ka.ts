@@ -186,6 +186,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "შეწყვეტილია",
   "ui.message.queued": "რიგში",
   "ui.message.attachment.alt": "დანართი",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "წაშლილია",
   "ui.patch.action.created": "შეიქმნა",
   "ui.patch.action.moved": "გადატანილია",

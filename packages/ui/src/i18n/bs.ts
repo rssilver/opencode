@@ -200,6 +200,7 @@ export const dict = {
   "ui.message.interrupted": "Prekinuto",
   "ui.message.queued": "Na čekanju",
   "ui.message.attachment.alt": "prilog",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
 
   "ui.patch.action.deleted": "Obrisano",
   "ui.patch.action.created": "Kreirano",

@@ -186,6 +186,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Διακοπή",
   "ui.message.queued": "Σε αναμονή",
   "ui.message.attachment.alt": "συνημμένο",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Διαγράφηκε",
   "ui.patch.action.created": "Δημιουργήθηκε",
   "ui.patch.action.moved": "Μετακινήθηκε",

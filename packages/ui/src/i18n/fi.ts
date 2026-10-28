@@ -168,6 +168,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "Keskeytetty",
   "ui.message.queued": "Jonossa",
   "ui.message.attachment.alt": "liite",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "Poistettu",
   "ui.patch.action.created": "Luotu",
   "ui.patch.action.moved": "Siirretty",

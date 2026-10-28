@@ -262,3 +262,46 @@ describe("Instruction.systemPaths global config", () => {
     }),
   )
 })
+
+describe("Instruction.system project memory", () => {
+  const withConfig =
+    (config: Effect.Success<ReturnType<Config.Interface["get"]>>) =>
+    <A, E, R>(self: Effect.Effect<A, E, R>) =>
+      self.pipe(
+        Effect.provide(
+          AppNodeBuilder.build(Instruction.node, [
+            [Config.node, Layer.succeed(Config.Service, TestConfig.make({ get: () => Effect.succeed(config) }))],
+            [Global.node, Global.layerWith({ home: "/nonexistent", config: "/nonexistent" })],
+            [RuntimeFlags.node, RuntimeFlags.layer({})],
+          ]),
+        ),
+      )
+
+  it.live("appends .opencode/memory.md under a heading", () =>
+    Effect.gen(function* () {
+      const dir = yield* tmpWithFiles({
+        "AGENTS.md": "# Rules",
+        ".opencode/memory.md": "- use bun\n- tests live in test/\n",
+      })
+      yield* Effect.gen(function* () {
+        const rules = yield* (yield* Instruction.Service).system()
+        expect(rules).toHaveLength(2)
+        expect(rules[1]).toBe("Project memory (from .opencode/memory.md)\n- use bun\n- tests live in test/")
+      }).pipe(provideInstance(dir), withConfig({}))
+    }),
+  )
+
+  it.live("skips silently when the file is missing or memory is disabled", () =>
+    Effect.gen(function* () {
+      const missing = yield* tmpWithFiles({ "AGENTS.md": "# Rules" })
+      yield* Effect.gen(function* () {
+        expect(yield* (yield* Instruction.Service).system()).toHaveLength(1)
+      }).pipe(provideInstance(missing), withConfig({}))
+
+      const disabled = yield* tmpWithFiles({ ".opencode/memory.md": "- use bun\n" })
+      yield* Effect.gen(function* () {
+        expect(yield* (yield* Instruction.Service).system()).toEqual([])
+      }).pipe(provideInstance(disabled), withConfig({ memory: { enabled: false } }))
+    }),
+  )
+})

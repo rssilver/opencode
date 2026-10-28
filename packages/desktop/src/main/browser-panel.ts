@@ -28,6 +28,20 @@ export function getBrowserState(win: BrowserWindow): BrowserState {
   return { tabs: panel.order.flatMap((id) => panel.tabs.get(id)?.state ?? []), active: panel.active }
 }
 
+/** Live contents of a tab (the active one when `id` is omitted), for the agent tools. */
+export function getBrowserContents(win: BrowserWindow, id?: string) {
+  const panel = panels.get(win)
+  const tab = panel?.tabs.get(id ?? panel.active ?? "")
+  if (!tab || tab.view.webContents.isDestroyed()) return undefined
+  return { id: tab.id, contents: tab.view.webContents }
+}
+
+/** Asks the renderer to show the browser panel, e.g. after the agent opened a tab. */
+export function requestBrowserOpen(win: BrowserWindow) {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return
+  win.webContents.send("browser-open-request")
+}
+
 export function createBrowserTab(win: BrowserWindow, input?: string) {
   const panel = panelFor(win)
   if (panel.tabs.size >= MAX_TABS) return undefined

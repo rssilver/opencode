@@ -188,6 +188,7 @@ export const dict: Record<string, string> = {
   "ui.message.interrupted": "बाधित",
   "ui.message.queued": "कतारबद्ध",
   "ui.message.attachment.alt": "अटैचमेंट",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "हटाया गया",
   "ui.patch.action.created": "बनाया गया",
   "ui.patch.action.moved": "ले जाया गया",

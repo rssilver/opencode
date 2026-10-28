@@ -186,6 +186,7 @@ export const dict = {
   "ui.message.interrupted": "ຂັດຂວາງ",
   "ui.message.queued": "ຄິວ",
   "ui.message.attachment.alt": "ໄຟລ໌ແນບ",
+  "ui.messagePart.toolImage.alt": "Tool screenshot",
   "ui.patch.action.deleted": "ລຶບແລ້ວ",
   "ui.patch.action.created": "ສ້າງແລ້ວ",
   "ui.patch.action.moved": "ຍ້າຍ",
