@@ -4,6 +4,8 @@ import { Data, Equal } from "effect"
 
 export type SummaryDiff = SnapshotFileDiff & { file: string }
 
+export type ThinkingProgress = { kind: "load" | "prompt"; value: number }
+
 export type ThinkingActivity =
   | "thinking"
   | "delegating"
@@ -38,6 +40,9 @@ export namespace TimelineRow {
     reasoningHeading?: string
     activity: ThinkingActivity
     startedAt: number
+    // Local-provider progress (LM Studio): which phase and the whole-number percent done.
+    progressKind?: ThinkingProgress["kind"]
+    progressPercent?: number
   }> {}
   export class DiffSummary extends Data.TaggedClass("DiffSummary")<{
     userMessageID: string

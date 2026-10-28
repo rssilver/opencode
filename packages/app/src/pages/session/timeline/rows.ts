@@ -2,11 +2,11 @@ import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import { AssistantMessage, Part, SessionStatus, UserMessage } from "@opencode-ai/sdk/v2"
 import { groupParts, renderable, type PartGroup } from "@opencode-ai/session-ui/message-part"
-import { TimelineRow, type SummaryDiff, type ThinkingActivity } from "./timeline-row"
+import { TimelineRow, type SummaryDiff, type ThinkingActivity, type ThinkingProgress } from "./timeline-row"
 import { uniqueSummaryDiffs } from "./summary-diffs"
 import { compareMessages } from "@/utils/session-message"
 
-export { TimelineRow, type SummaryDiff, type ThinkingActivity } from "./timeline-row"
+export { TimelineRow, type SummaryDiff, type ThinkingActivity, type ThinkingProgress } from "./timeline-row"
 
 const TOOL_ACTIVITY: Record<string, ThinkingActivity> = {
   task: "delegating",
@@ -44,7 +44,14 @@ export type TimelineRowMap = {
     group: PartGroup
     previousAssistantPart: boolean
   }
-  Thinking: { userMessageID: string; reasoningHeading?: string; activity: ThinkingActivity; startedAt: number }
+  Thinking: {
+    userMessageID: string
+    reasoningHeading?: string
+    activity: ThinkingActivity
+    startedAt: number
+    progressKind?: ThinkingProgress["kind"]
+    progressPercent?: number
+  }
   Retry: { userMessageID: string }
   DiffSummary: { userMessageID: string; diffs: SummaryDiff[] }
   Error: { userMessageID: string; text: string }
@@ -59,6 +66,7 @@ export namespace Timeline {
     status: SessionStatus["type"],
     inlineComments: boolean,
     projectedUserMessages: UserMessage[],
+    progress?: ThinkingProgress,
   ) {
     const turns: { user: UserMessage; assistants: AssistantMessage[] }[] = []
     const turnByUserID = new Map<string, (typeof turns)[number]>()
@@ -111,6 +119,7 @@ export namespace Timeline {
           status,
           turn.user.id === activeMessageID,
           inlineComments,
+          progress,
         ),
       ),
     }
@@ -126,6 +135,7 @@ export namespace Timeline {
     isActive: boolean,
     // v2 renders comments inside the user message attachments row instead of a strip row
     inlineComments: boolean,
+    progress?: ThinkingProgress,
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
@@ -220,6 +230,8 @@ export namespace Timeline {
           reasoningHeading: heading,
           activity: thinkingActivity(parts),
           startedAt: userMessage.time.created,
+          progressKind: progress?.kind,
+          progressPercent: progress ? Math.round(Math.min(1, Math.max(0, progress.value)) * 100) : undefined,
         }),
       )
     }

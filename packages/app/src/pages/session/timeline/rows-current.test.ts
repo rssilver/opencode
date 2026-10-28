@@ -59,6 +59,27 @@ describe("current session timeline rows", () => {
     ])
   })
 
+  test("carries local provider progress into the thinking row", () => {
+    const source = [{ id: "msg_1", type: "user", text: "hi", time: { created: 1 } }] satisfies SessionMessageInfo[]
+    const normalized = normalizeSessionMessages("ses_1", source)
+    const messages = new Map(normalized.messages.map((message) => [message.id, message]))
+    const rows = (progress?: { kind: "load" | "prompt"; value: number }) =>
+      Timeline.constructSessionMessageRows(
+        source,
+        (messageID) => messages.get(messageID),
+        (messageID) => normalized.parts.get(messageID) ?? [],
+        true,
+        "busy",
+        true,
+        normalized.messages.filter((message) => message.role === "user"),
+        progress,
+      ).rows.flatMap((row) => (row._tag === "Thinking" ? [row] : []))
+
+    expect(rows({ kind: "prompt", value: 0.624 })[0]).toMatchObject({ progressKind: "prompt", progressPercent: 62 })
+    expect(rows({ kind: "load", value: 0.45 })[0]).toMatchObject({ progressKind: "load", progressPercent: 45 })
+    expect(rows()[0]?.progressKind).toBeUndefined()
+  })
+
   test("renders a current shell message as a standalone turn", () => {
     const source = [
       {

@@ -429,3 +429,18 @@ per-turn final-answer grouping from them is included here.
 - Verification: `bun typecheck` clean in app, opencode, desktop, session-ui. Tests: app session+components 243
   pass; opencode `wrap-up` + `retitle` 9 pass; desktop bookmarks parser 2 pass. Not checked live: the new
   dialogs, bookmarks UI in Electron, and whether models respect the wrap_up rule.
+
+## 2026-10-28 — LM Studio load and prompt-processing progress
+
+- **schema / sdk** — `SessionStatus` busy gets optional `progress: { kind: "load" | "prompt", value }`
+  (`packages/schema/src/session-status-event.ts`); regenerated `packages/sdk/js/src/v2/gen/types.gen.ts`
+  (also picked up pending Config fields from earlier sessions).
+- **opencode** — New `src/provider/lmstudio-progress.ts`: detects local LM Studio (`/api/v1/models` probe),
+  pre-loads an unloaded model through `/api/v1/chat` to read `model_load.progress`, and reads
+  `lms log stream --source server --json` for "Prompt processing progress: N%" lines. Hooked into
+  `session/processor.ts`; progress clears on the first token. Only the V1 processor path is wired.
+- **app / session-ui** — Thinking row shows "Loading model N%" / "Processing prompt N%" with a thin bar
+  (`timeline/rows.ts`, `timeline-row.ts`, `projection.ts`, `message-timeline.tsx`, `session-turn.css`,
+  `ui/src/i18n/en.ts`).
+- Verification: prompt progress streamed live 0→100% from the user's LM Studio; load path unit-tested only.
+  Tests: lmstudio-progress 8, processor-effect 17, app session 104 pass; typecheck clean.

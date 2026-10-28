@@ -690,6 +690,10 @@ export type SessionStatus =
     }
   | {
       type: "busy"
+      progress?: {
+        kind: "load" | "prompt"
+        value: number
+      }
     }
 
 export type QuestionOption = {
@@ -1934,6 +1938,18 @@ export type Config = {
   enabled_providers?: Array<string>
   model?: string
   small_model?: string
+  vision?: {
+    model?: string
+  }
+  verify?: {
+    command?: string
+    timeout_ms?: number
+    max_attempts?: number
+    enabled?: boolean
+  }
+  memory?: {
+    enabled?: boolean
+  }
   default_agent?: string
   subagent_depth?: number
   username?: string
@@ -2020,6 +2036,18 @@ export type Config = {
     tail_turns?: number
     preserve_recent_tokens?: number
     reserved?: number
+    /**
+     * Fraction of the model context window (0-1] at which to summarize the session
+     */
+    threshold?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    ttft?: {
+      enabled?: boolean
+      /**
+       * Latest time-to-first-token must exceed baseline times this factor (default: 3)
+       */
+      factor?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      min_ms?: number
+    }
   }
   experimental?: {
     disable_paste_summary?: boolean

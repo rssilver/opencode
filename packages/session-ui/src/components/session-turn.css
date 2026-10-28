@@ -81,6 +81,22 @@
     }
   }
 
+  /* Thin determinate bar shown beside the label while a local model loads or processes the prompt. */
+  [data-slot="session-turn-thinking-progress"] {
+    flex: 0 0 64px;
+    height: 3px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--border-weak-base, currentColor);
+
+    > span {
+      display: block;
+      height: 100%;
+      background: var(--text-interactive-base, var(--text-strong));
+      transition: width 200ms ease-out;
+    }
+  }
+
   [data-slot="session-turn-thinking-elapsed"] {
     flex-shrink: 0;
     color: var(--text-weaker);

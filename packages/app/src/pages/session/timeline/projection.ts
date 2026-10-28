@@ -29,6 +29,10 @@ export function createTimelineProjection(input: {
     })
     return result
   })
+  const progress = createMemo(() => {
+    const status = input.status()
+    return status.type === "busy" ? status.progress : undefined
+  })
   const projection = createMemo(() =>
     Timeline.constructSessionMessageRows(
       input.sessionMessages(),
@@ -38,6 +42,7 @@ export function createTimelineProjection(input: {
       input.status().type,
       input.inlineComments(),
       input.userMessages(),
+      progress(),
     ),
   )
   const activeMessageID = createMemo(() => projection().activeMessageID)

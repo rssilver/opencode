@@ -28,6 +28,13 @@ export const Info = Schema.Union([
   }),
   Schema.Struct({
     type: Schema.Literal("busy"),
+    // Local-provider progress (LM Studio) for the model load or prompt processing phase; value is 0..1.
+    progress: optional(
+      Schema.Struct({
+        kind: Schema.Literals(["load", "prompt"]),
+        value: Schema.Finite,
+      }),
+    ),
   }),
 ]).annotate({ identifier: "SessionStatus" })
 export type Info = Schema.Schema.Type<typeof Info>

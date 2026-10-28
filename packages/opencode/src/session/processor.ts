@@ -2,7 +2,7 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Image } from "@/image/image"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
-import { Cause, Deferred, Effect, Exit, Layer, Context, Scope, Schema } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Context, Scope, Schema } from "effect"
 import * as Stream from "effect/Stream"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
@@ -26,6 +26,7 @@ import { isRecord } from "@/util/record"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Database } from "@opencode-ai/core/database/database"
 import { Usage, type LLMEvent } from "@opencode-ai/llm"
+import { LmStudioProgress } from "@/provider/lmstudio-progress"
 
 const DOOM_LOOP_THRESHOLD = 3
 export type Result = "compact" | "stop" | "continue"
@@ -116,6 +117,7 @@ const layer = Layer.effect(
       let aborted = false
       let firstTokenMs: number | undefined
       let attemptStartedAt = 0
+      let promptProgress: Fiber.Fiber<void> | undefined
 
       const parse = (e: unknown) =>
         MessageV2.fromError(e, {
@@ -287,6 +289,12 @@ const layer = Layer.effect(
             value.type === "tool-call")
         )
           firstTokenMs = performance.now() - attemptStartedAt
+        if (firstTokenMs !== undefined && promptProgress) {
+          const fiber = promptProgress
+          promptProgress = undefined
+          yield* Fiber.interrupt(fiber)
+          yield* status.set(ctx.sessionID, { type: "busy" })
+        }
         switch (value.type) {
           case "reasoning-start":
             if (value.id in ctx.reasoningMap) return
@@ -650,6 +658,20 @@ const layer = Layer.effect(
         yield* status.set(ctx.sessionID, { type: "idle" })
       })
 
+      // Publishes local-provider (LM Studio) load / prompt progress into the busy status, then clears it.
+      const reportProgress = (kind: "load" | "prompt", watcher: LmStudioProgress.Watcher) =>
+        Effect.gen(function* () {
+          let last: { value: number; at: number } | undefined
+          while (true) {
+            const value = yield* Effect.promise(() => watcher.next())
+            if (value === undefined) break
+            if (!LmStudioProgress.shouldPublish(last, value, Date.now())) continue
+            last = { value, at: Date.now() }
+            yield* status.set(ctx.sessionID, { type: "busy", progress: { kind, value } })
+          }
+          yield* status.set(ctx.sessionID, { type: "busy" })
+        }).pipe(Effect.ensuring(Effect.sync(() => watcher.close())))
+
       const process = Effect.fn("SessionProcessor.process")(function* (streamInput: LLM.StreamInput) {
         yield* Effect.logInfo("process", {
           "session.id": input.sessionID,
@@ -663,8 +685,14 @@ const layer = Layer.effect(
             ctx.currentText = undefined
             ctx.reasoningMap = {}
             yield* status.set(ctx.sessionID, { type: "busy" })
+            const lmstudio = yield* Effect.promise(() => LmStudioProgress.detect(input.model))
+            if (lmstudio) yield* reportProgress("load", LmStudioProgress.load(lmstudio, input.model.api.id))
             firstTokenMs = undefined
             attemptStartedAt = performance.now()
+            if (lmstudio)
+              promptProgress = yield* Effect.forkChild(
+                reportProgress("prompt", LmStudioProgress.prompt(input.model.api.id)),
+              )
             const stream = llm.stream(streamInput)
 
             yield* stream.pipe(
@@ -673,6 +701,13 @@ const layer = Layer.effect(
               Stream.runDrain,
             )
           }).pipe(
+            Effect.ensuring(
+              Effect.suspend(() => {
+                const fiber = promptProgress
+                promptProgress = undefined
+                return fiber ? Fiber.interrupt(fiber) : Effect.void
+              }),
+            ),
             Effect.onInterrupt(() =>
               Effect.gen(function* () {
                 aborted = true

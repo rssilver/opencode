@@ -141,11 +141,18 @@ const THINKING_LABEL = {
   runningCommands: "ui.sessionTurn.status.runningCommands",
 } as const
 
+const PROGRESS_LABEL = {
+  load: "ui.sessionTurn.status.loadingModel",
+  prompt: "ui.sessionTurn.status.processingPrompt",
+} as const
+
 function TimelineThinkingRow(props: {
   reasoningHeading?: string
   showReasoningSummaries: boolean
   activity: ThinkingActivity
   startedAt: number
+  progressKind?: "load" | "prompt"
+  progressPercent?: number
 }) {
   const language = useLanguage()
   const [now, setNow] = createSignal(Date.now())
@@ -155,7 +162,18 @@ function TimelineThinkingRow(props: {
   return (
     <div data-slot="session-turn-thinking">
       <span data-slot="session-turn-thinking-glyph" aria-hidden="true" />
-      <TextShimmer text={language.t(THINKING_LABEL[props.activity])} />
+      <TextShimmer
+        text={
+          props.progressKind && props.progressPercent !== undefined
+            ? language.t(PROGRESS_LABEL[props.progressKind], { percent: props.progressPercent })
+            : language.t(THINKING_LABEL[props.activity])
+        }
+      />
+      <Show when={props.progressKind && props.progressPercent !== undefined}>
+        <span data-slot="session-turn-thinking-progress" aria-hidden="true">
+          <span style={{ width: `${props.progressPercent}%` }} />
+        </span>
+      </Show>
       <span data-slot="session-turn-thinking-elapsed">{formatCompactDuration(now() - props.startedAt)}</span>
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
@@ -1349,6 +1367,8 @@ export function MessageTimeline(props: {
                 showReasoningSummaries={settings.general.showReasoningSummaries()}
                 activity={thinkingRow().activity}
                 startedAt={thinkingRow().startedAt}
+                progressKind={thinkingRow().progressKind}
+                progressPercent={thinkingRow().progressPercent}
               />
             </div>
           </TimelineRowFrame>
