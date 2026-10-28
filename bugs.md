@@ -57,6 +57,22 @@ for a V1 session until a reload refetches it. Next step: reproduce with a small 
 which event types reach `applyV2` after `session.compacted`. Server-side status (`processor.ts` / `run-state.ts`)
 looks correct.
 
+**Update 2026-10-28 (live test):** ruled out the plain "summarize + auto-continue" path. With LM Studio, `POST
+/session/:id/summarize {auto: true}` on a session open in the app: the server emits every message/part, ends
+`idle`, and the app updates live (summary, continuation and answer all shown, no stuck "Thinking"). The
+remaining suspect is the **overflow-triggered** path: `processor.ts` `halt()` sets `ctx.needsCompaction` and
+publishes `Session.Event.Error` (ContextOverflow) mid-turn, then `prompt.ts` runs compaction inside the loop.
+Check what the app does with that `session.error` and the errored assistant message (e.g. `rows.ts` `error`
+handling, or a status/turn that never clears). Repro needs a tiny context limit (model `limit.context`, or a
+low summary threshold) so a normal prompt overflows. Trace script: scratchpad `repro/trace.ts` pattern (SSE
+`/event` + `prompt_async` + `summarize`).
+
+**Update 2026-10-28 (soft auto-compaction, live in the app):** not reproducible on `collapse-settings`. Backend
+run with `OPENCODE_CONFIG_CONTENT='{"compaction":{"threshold":0.5},"provider":{"lmstudio":{"models":{"tiel-coder-35b-a3b":{"limit":{"context":24000,"output":4000}}}}}}'`
+so the next prompt auto-compacted. The app showed the summary and the answer live, and went idle. Side note: custom
+LM Studio models with no `limit.context` never auto-compact (`isOverflow` returns false for context 0). Still open
+only for the hard-overflow path, i.e. a provider context-length error mid-turn.
+
 ## `read` test "normalizes read permission paths on Windows" fails (pre-existing)
 
 **Status:** open, not caused by this branch (fails with this branch's tool changes reverted).
