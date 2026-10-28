@@ -232,7 +232,7 @@ async function navigateHistory(action: "back" | "forward", tabId?: string) {
   return text(`Now at ${wc.getURL()}\nTitle: ${wc.getTitle() || "(none)"}`)
 }
 
-function requireTab(id?: string) {
+export function requireTab(id?: string) {
   const tab = getBrowserContents(targetWindow(), id)
   if (tab) return tab
   throw new ToolError(
@@ -242,7 +242,7 @@ function requireTab(id?: string) {
   )
 }
 
-async function runInPage<T>(wc: WebContents, code: string) {
+export async function runInPage<T>(wc: WebContents, code: string) {
   try {
     return (await wc.executeJavaScriptInIsolatedWorld(WORLD_ID, [{ code }])) as T
   } catch (error) {
@@ -301,6 +301,6 @@ function text(value: string): ToolResult {
   return { content: [{ type: "text", text: value }] }
 }
 
-function sleep(ms: number) {
+export function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }

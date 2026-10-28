@@ -476,3 +476,20 @@ per-turn final-answer grouping from them is included here.
 - Follow-up: guide line now continuous (overshoots each row, trimmed by the virtual row's `overflow: clip`),
   and Explored (`context-tool-group-title`) and Edit/Write/Patch (`message-part-title*`) titles join the
   13px regular style. Checked on a mock with clipped, spaced virtual rows in the dev preview.
+
+## 2026-10-28 — `video_watch` and `browser_video_watch` (todo #11)
+
+- **opencode** — new builtin tool `video_watch` (`packages/opencode/src/tool/video-watch.ts`, `.txt`), registered
+  in `registry.ts`. ffprobe chapters/streams, embedded or sidecar subtitles, local whisper.cpp fallback,
+  scene-change + narration + evenly spaced frames (768 px JPEG, `maxFrames` default 12), `start`/`end` zoom.
+- **opencode** — `view-images.ts`: the vision-model fallback is now the exported `describeImages(services, ...)`
+  so `video_watch` reuses it; `view_images` behavior unchanged.
+- **desktop** — new agent tool `browser_video_watch` (`agent-tools/video-tools.ts`, `video-script.ts`), added to
+  the MCP tool list in `server.ts`; `browser-tools.ts` exports `requireTab`, `runInPage`, `sleep`.
+- **Install (outside repo)** — whisper.cpp b5454 CUDA 12.4 + CPU builds and `ggml-large-v3-turbo-q5_0.bin` under
+  `%LOCALAPPDATA%\opencode\whisper` (details in `spec.md`).
+- Verification: `bun typecheck` clean in `packages/opencode` and `packages/desktop`; `test/tool/video-watch.test.ts`
+  (timestamps, VTT/SRT parsing, chunking, frame selection, and an end-to-end run on an ffmpeg `testsrc` clip with an
+  embedded SRT track) plus `view-images.test.ts`: 17 pass; desktop `agent-tools` tests: 31 pass.
+  Not verified: Whisper transcription through the tool (running the downloaded binary was blocked by the session's
+  permission check after one smoke run) and `browser_video_watch` against a live YouTube page.

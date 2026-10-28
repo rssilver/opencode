@@ -104,51 +104,6 @@ export const ViewImagesTool = Tool.define<
       return params.pattern ? found : found.filter((item) => IMAGE_EXTENSION.test(item))
     })
 
-    const describe = Effect.fn("ViewImagesTool.describe")(function* (
-      ctx: Tool.Context<Metadata>,
-      modelRef: string,
-      question: string,
-      images: { label: string; mime: string; url: string }[],
-    ) {
-      const parsed = Provider.parseModel(modelRef)
-      const model = yield* provider.getModel(parsed.providerID, parsed.modelID)
-      const agent = yield* agents.get(ctx.agent)
-      const user = ctx.messages.flatMap((item) => (item.info.role === "user" ? [item.info] : [])).at(-1)
-      if (!agent || !user) return yield* Effect.fail(new Error("no active session message to attach the request to"))
-      const messages: ModelMessage[] = [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `${question}\n\nAnswer separately for each of the ${images.length} image(s), prefixed with its label.`,
-            },
-            ...images.flatMap((image) => [
-              { type: "text" as const, text: `Image: ${image.label}` },
-              { type: "image" as const, image: image.url, mediaType: image.mime },
-            ]),
-          ],
-        },
-      ]
-      return yield* llm
-        .stream({
-          agent,
-          user,
-          system: [],
-          small: true,
-          tools: {},
-          model,
-          sessionID: ctx.sessionID,
-          retries: 2,
-          messages,
-        })
-        .pipe(
-          Stream.filter(LLMEvent.is.textDelta),
-          Stream.map((event) => event.text),
-          Stream.mkString,
-        )
-    })
-
     const run = Effect.fn("ViewImagesTool.execute")(function* (
       params: Schema.Schema.Type<typeof Parameters>,
       ctx: Tool.Context<Metadata>,
@@ -256,7 +211,7 @@ export const ViewImagesTool = Tool.define<
           0,
         )
 
-      const answer = yield* describe(ctx, vision!, params.question?.trim() || DEFAULT_QUESTION, loaded).pipe(
+      const answer = yield* describeImages({ provider, llm, agents }, ctx, vision!, params.question?.trim() || DEFAULT_QUESTION, loaded).pipe(
         Effect.map((text) => text.trim() || "(the vision model returned no text)"),
         Effect.catch((error) =>
           Effect.succeed(`Vision model ${vision} failed: ${error instanceof Error ? error.message : String(error)}`),
@@ -281,6 +236,52 @@ export const ViewImagesTool = Tool.define<
     }
   }),
 )
+
+export const describeImages = Effect.fn("ViewImagesTool.describe")(function* (
+  services: { provider: Provider.Interface; llm: LLM.Interface; agents: Agent.Interface },
+  ctx: Tool.Context,
+  modelRef: string,
+  question: string,
+  images: { label: string; mime: string; url: string }[],
+) {
+  const parsed = Provider.parseModel(modelRef)
+  const model = yield* services.provider.getModel(parsed.providerID, parsed.modelID)
+  const agent = yield* services.agents.get(ctx.agent)
+  const user = ctx.messages.flatMap((item) => (item.info.role === "user" ? [item.info] : [])).at(-1)
+  if (!agent || !user) return yield* Effect.fail(new Error("no active session message to attach the request to"))
+  const messages: ModelMessage[] = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `${question}\n\nAnswer separately for each of the ${images.length} image(s), prefixed with its label.`,
+        },
+        ...images.flatMap((image) => [
+          { type: "text" as const, text: `Image: ${image.label}` },
+          { type: "image" as const, image: image.url, mediaType: image.mime },
+        ]),
+      ],
+    },
+  ]
+  return yield* services.llm
+    .stream({
+      agent,
+      user,
+      system: [],
+      small: true,
+      tools: {},
+      model,
+      sessionID: ctx.sessionID,
+      retries: 2,
+      messages,
+    })
+    .pipe(
+      Stream.filter(LLMEvent.is.textDelta),
+      Stream.map((event) => event.text),
+      Stream.mkString,
+    )
+})
 
 function formatBytes(size: number) {
   if (size < 1024) return `${size} B`

@@ -11,6 +11,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ViewImagesTool } from "./view-images"
+import { VideoWatchTool } from "./video-watch"
 import { MemoryTool } from "./memory"
 import { LLM } from "@/session/llm"
 import { TaskTool } from "./task"
@@ -106,6 +107,7 @@ const layer = Layer.effect(
     const task = yield* TaskTool
     const read = yield* ReadTool
     const viewImages = yield* ViewImagesTool
+    const videoWatch = yield* VideoWatchTool
     const memory = yield* MemoryTool
     const question = yield* QuestionTool
     const wrapUp = yield* WrapUpTool
@@ -220,6 +222,7 @@ const layer = Layer.effect(
           shell: Tool.init(shell),
           read: Tool.init(read),
           viewImages: Tool.init(viewImages),
+          videoWatch: Tool.init(videoWatch),
           memory: Tool.init(memory),
           glob: Tool.init(globtool),
           grep: Tool.init(greptool),
@@ -247,6 +250,7 @@ const layer = Layer.effect(
             tool.shell,
             tool.read,
             tool.viewImages,
+            tool.videoWatch,
             ...(memoryEnabled ? [tool.memory] : []),
             tool.glob,
             tool.grep,
