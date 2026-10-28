@@ -34,6 +34,7 @@ import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import { reviewTooltipKeybind } from "../command-tooltip-keybind"
 import { useTitlebarRightMount } from "../titlebar"
 import { ContextMeter } from "./session-context-meter"
+import { useSessionInfoState } from "@/pages/session/session-info-panel"
 
 const OPEN_APPS = [
   "vscode",
@@ -148,6 +149,7 @@ export function SessionHeader() {
   const sync = useSync()
   const terminal = useTerminal()
   const { params, view } = useSessionLayout()
+  const info = useSessionInfoState()
 
   const projectDirectory = createMemo(() => decode64(params.dir) ?? "")
   const project = createMemo(() => {
@@ -248,6 +250,10 @@ export function SessionHeader() {
     browserVisible: isDesktop() && !!platform.browser,
     browserOpened: view().browser.opened(),
     onBrowserToggle: () => view().browser.toggle(),
+    infoLabel: language.t("session.info.toggle"),
+    infoVisible: isDesktop() && !!params.id,
+    infoOpened: info.opened(),
+    onInfoToggle: info.toggle,
   }))
 
   const selectApp = (app: OpenApp) => {
@@ -509,6 +515,20 @@ export function SessionHeader() {
                           </div>
                         </Button>
                       </TooltipKeybind>
+                      <Show when={!!params.id}>
+                        <Tooltip placement="bottom" value={language.t("session.info.toggle")}>
+                          <Button
+                            variant="ghost"
+                            class="titlebar-icon w-8 h-6 p-0 box-border"
+                            onClick={info.toggle}
+                            aria-label={language.t("session.info.toggle")}
+                            aria-expanded={info.opened()}
+                            aria-controls="session-info-panel"
+                          >
+                            <Icon size="small" name={info.opened() ? "layout-right-full" : "layout-right"} />
+                          </Button>
+                        </Tooltip>
+                      </Show>
                     </div>
                   </div>
                 </div>
@@ -536,6 +556,10 @@ type SessionHeaderV2ActionsState = {
   browserVisible: boolean
   browserOpened: boolean
   onBrowserToggle: () => void
+  infoLabel: string
+  infoVisible: boolean
+  infoOpened: boolean
+  onInfoToggle: () => void
 }
 
 function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
@@ -600,6 +624,22 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
             aria-expanded={props.state.reviewOpened}
             aria-controls="review-panel"
             icon={<IconV2 name="sidebar-right" />}
+          />
+        </TooltipV2>
+      </Show>
+      <Show when={props.state.infoVisible}>
+        <TooltipV2 class="shrink-0" placement="bottom" value={props.state.infoLabel}>
+          <IconButtonV2
+            type="button"
+            variant="ghost-muted"
+            size="large"
+            class="!w-9 shrink-0"
+            state={props.state.infoOpened ? "pressed" : undefined}
+            onClick={props.state.onInfoToggle}
+            aria-label={props.state.infoLabel}
+            aria-expanded={props.state.infoOpened}
+            aria-controls="session-info-panel"
+            icon={<Icon size="small" name={props.state.infoOpened ? "layout-right-full" : "layout-right"} />}
           />
         </TooltipV2>
       </Show>

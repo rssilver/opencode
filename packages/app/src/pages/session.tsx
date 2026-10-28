@@ -91,6 +91,7 @@ import { createReviewPanelV2State } from "@/pages/session/v2/review-panel-v2-sta
 import { reviewDiffDirectory, reviewDiffNeedsLoad, reviewRootDirectory } from "@/pages/session/v2/review-diff-kinds"
 import { TerminalPanel } from "@/pages/session/terminal-panel"
 import { BrowserPanel } from "@/pages/session/browser-panel"
+import { SessionInfoPanel, useSessionInfoState } from "@/pages/session/session-info-panel"
 import { TerminalPanelV2 } from "@/pages/session/terminal-panel-v2"
 import { useComposerCommands } from "@/pages/session/use-composer-commands"
 import { useSessionCommands } from "@/pages/session/use-session-commands"
@@ -447,6 +448,7 @@ export default function Page() {
   )
 
   const isDesktop = createMediaQuery("(min-width: 768px)")
+  const infoPanel = useSessionInfoState()
   const size = createSizing()
   const desktopReviewOpen = createMemo(() => isDesktop() && view().reviewPanel.opened())
   const desktopV2ReviewOpen = createMemo(() => newSessionDesign() && desktopReviewOpen() && !!params.id)
@@ -2260,9 +2262,10 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
+      <div class="flex-1 min-h-0 flex flex-row">
       <div
         ref={panelRow}
-        class="flex-1 min-h-0 flex flex-col md:flex-row"
+        class="flex-1 min-w-0 min-h-0 flex flex-col md:flex-row"
         classList={{
           "gap-2 p-2": settings.general.newLayoutDesigns(),
         }}
@@ -2397,6 +2400,10 @@ export default function Page() {
             </div>
           </Show>
         </Show>
+      </div>
+      <Show when={isDesktop() && !!params.id && infoPanel.opened()}>
+        <SessionInfoPanel state={infoPanel} onOpenReview={() => view().reviewPanel.open()} />
+      </Show>
       </div>
 
       <Show when={!newSessionDesign()}>

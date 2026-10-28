@@ -335,6 +335,14 @@ in the description (only when the list starts at 0:00). Frames: chapter starts p
 8, max 16); for each it pauses, seeks, waits for `seeked`, and captures the player rect with
 `webContents.capturePage`, scaled to 768 px JPEG. The original position and play state are restored. Returns
 text + images like `browser_screenshot`. `requireTab`, `runInPage` and `sleep` in `browser-tools.ts` are now exported.
+### Session info side panel (app)
+
+A collapsible right-hand panel (`pages/session/session-info-panel.tsx`) toggled from the session
+header, showing what the session is working with. Cards: **Environment** (this computer / WSL /
+remote server, project, path, branch), **Context** (the header context meter's details, via
+`useContextMeter` + `ContextMeterDetails`), and **Changes** (+/- lines and files; click opens the
+review panel). Panel and card open state persist per user under `session.info.v1`. Servers and
+Background tasks cards are not built yet: there is no app-side data source for them.
 
 ## Verification
 
