@@ -47,6 +47,16 @@ final answer are both there.
 event stream the app listens to (v2 `/api/event`), and whether the session status returns to idle in the
 app's store after a compaction run.
 
+**Update 2026-10-28 (static read, not reproduced):** the timeline renders from the V2 projection
+(`data.session_message`, `message-timeline.tsx:382`), built by `server-session-v2-reducer.ts` from
+`session.*` V2 events. The V1 engine's compaction (`packages/opencode/src/session/compaction.ts`) only writes V1
+messages/parts (`session.updateMessage` / `updatePart` → `message.updated` events, handled by
+`global-sync/event-reducer.ts`) and publishes `Event.Compacted`. It never emits `session.compaction.*` or new
+`session.step.*` events for the follow-up turn. Likely cause: after compaction, the V2 projection stops advancing
+for a V1 session until a reload refetches it. Next step: reproduce with a small `compaction` threshold, then log
+which event types reach `applyV2` after `session.compacted`. Server-side status (`processor.ts` / `run-state.ts`)
+looks correct.
+
 ## `read` test "normalizes read permission paths on Windows" fails (pre-existing)
 
 **Status:** open, not caused by this branch (fails with this branch's tool changes reverted).

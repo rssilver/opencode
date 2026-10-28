@@ -4,10 +4,10 @@ Sorted by impact vs. effort: quick wins first, then large high-impact work, then
 
 | # | Item | Effort | Impact | Why here |
 |---|------|--------|--------|----------|
-| 1 | Richer "Thinking" loader with animation | low | medium | seen on every turn, one component |
-| 2 | Add models and providers from the app (no opencode.json editing) | low–medium | high | form and config writes already exist |
-| 3 | Update the session title as the session progresses | low–medium | medium | small backend change, fixes stale titles |
-| 4 | Interactive "next step" cards at the end of a turn | medium | high | big usability gain; reuses the `question` tool pattern |
+| 1 | ~~Richer "Thinking" loader with animation~~ **done** | low | medium | seen on every turn, one component |
+| 2 | ~~Add models and providers from the app~~ **done** | low–medium | high | form and config writes already exist |
+| 3 | ~~Update the session title as the session progresses~~ **done** | low–medium | medium | small backend change, fixes stale titles |
+| 4 | ~~Interactive "next step" cards at the end of a turn~~ **done** (extras left) | medium | high | big usability gain; reuses the `question` tool pattern |
 | 5 | Browser password vault so the agent can sign in | medium | high | bookmarks done; vault + agent sign-in left |
 | 6 | Sidebar rework (Devin / Claude Code style) and `@` workspace tagging | high | high | biggest UX change; do after the quick wins |
 | 7 | Deep-wiki for a workspace (Devin style) | medium–high | high | faster, cheaper sessions on big repos |
@@ -24,13 +24,11 @@ Sorted by impact vs. effort: quick wins first, then large high-impact work, then
 
 ## Quick fixes
 
-- **Collapse arrows sit too far from their label.** "Worked for 1m 8s" and the other global collapse rows
-  put the chevron at the far right of a full-width row (`justify-between`), far from the text. Put the
-  chevron right after the label (like Claude Code), keep the whole row clickable.
+- ~~Collapse arrows sit too far from their label~~ **done** (chevron now sits right after the label).
 
-## Backlog (planned, not started)
+## Backlog
 
-### 1. Richer "Thinking" loader with animation
+### 1. Richer "Thinking" loader with animation (done)
 The row that shows while the model works is a shimmer of the word "Thinking" plus an optional
 reasoning heading (`TimelineThinkingRow` in `packages/app/src/pages/session/timeline/message-timeline.tsx`).
 - **More detail:** elapsed time (`Thinking · 12s`), what it is doing now (thinking / writing / running
@@ -41,7 +39,7 @@ reasoning heading (`TimelineThinkingRow` in `packages/app/src/pages/session/time
 - New i18n keys for the phase labels (en first, other locales fall back).
 - Effort: low (one component + CSS, data already in the session store).
 
-### 2. Add models and providers from the app (no opencode.json editing)
+### 2. Add models and providers from the app (done)
 A custom-provider dialog already exists (`dialog-custom-provider.tsx`, saved through `updateConfig`), but it
 only adds OpenAI-compatible providers, can't edit or remove one afterwards, and can't add a model to a
 provider that's already listed.
@@ -55,7 +53,7 @@ provider that's already listed.
 - Choose where it's saved: global config (default) or this project's config.
 - Effort: low–medium (form + config writes already exist). Impact: high (the most common setup snag).
 
-### 3. Update the session title as the session progresses
+### 3. Update the session title as the session progresses (done)
 Titles are generated once, from the first user message, and only while the title is still the default
 (`SessionPrompt.ensureTitle` in `packages/opencode/src/session/prompt.ts`). Long sessions drift away from it.
 - **When:** re-run the `title` agent at natural boundaries, not every turn: e.g. after the 3rd and then
@@ -68,7 +66,7 @@ Titles are generated once, from the first user message, and only while the title
 - Optional setting: `autoRetitle` on/off in general settings.
 - Effort: low–medium (backend trigger + flag; the app already reacts to title updates).
 
-### 4. Interactive "next step" cards at the end of a turn
+### 4. Interactive "next step" cards at the end of a turn (done; "Extras later" still open)
 The small card some AI coding apps show when a turn ends: a 2–3 sentence recap of what changed and what is
 not done or verified, then at most one question with 1–2 reply buttons (e.g. "Closed it" / "Test later").
 Clicking a button sends its canned reply as the user's next message; the user can always type instead.
