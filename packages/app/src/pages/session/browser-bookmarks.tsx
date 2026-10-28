@@ -8,6 +8,7 @@ import { Tooltip } from "@opencode-ai/ui/tooltip"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import type { BrowserBookmark, BrowserImportProfile, BrowserPlatform } from "@/browser"
 import { useLanguage } from "@/context/language"
+import { DialogPasswords } from "./browser-passwords"
 
 export function BookmarkStar(props: { saved: boolean; disabled: boolean; onToggle: () => void }) {
   const language = useLanguage()
@@ -94,6 +95,9 @@ export function BookmarksMenu(props: {
             }
           >
             <DropdownMenu.ItemLabel>{language.t("browser.bookmarks.import")}</DropdownMenu.ItemLabel>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onSelect={() => dialog.show(() => <DialogPasswords api={props.api} />)}>
+            <DropdownMenu.ItemLabel>{language.t("browser.passwords.menu")}</DropdownMenu.ItemLabel>
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

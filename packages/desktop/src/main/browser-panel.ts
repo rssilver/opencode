@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { BrowserWindow, session, WebContentsView } from "electron"
 import type { BrowserBounds, BrowserState, BrowserTabState } from "@opencode-ai/app/browser"
 import { activeAfterClose, isAllowedBrowserUrl, resolveBrowserInput } from "./browser-url"
+import { watchLogins } from "./browser-passwords"
 import { write as writeLog } from "./logging"
 
 // Browsed sites live in their own partition so the app window's session hooks
@@ -56,6 +59,8 @@ export function createBrowserTab(win: BrowserWindow, input?: string) {
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
+      // Reports login submits for "Save password?"; exposes nothing to the page.
+      preload: join(dirname(fileURLToPath(import.meta.url)), "../preload/browser-login.js"),
     },
   })
   const tab: Tab = {
@@ -185,6 +190,7 @@ function wireTab(win: BrowserWindow, tab: Tab) {
   }
   wc.on("will-frame-navigate", (event) => guard(event, event.url))
   wc.on("will-redirect", (event) => guard(event, event.url))
+  watchLogins(win, tab.id, wc)
   wc.on("did-start-loading", sync)
   wc.on("did-stop-loading", sync)
   wc.on("did-navigate", sync)

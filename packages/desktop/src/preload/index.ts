@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
-import type { BrowserState } from "@opencode-ai/app/browser"
+import type { BrowserPasswordOffer, BrowserSignInRequest, BrowserState } from "@opencode-ai/app/browser"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -34,6 +34,27 @@ const api: ElectronAPI = {
     stop: (id) => ipcRenderer.invoke("browser-stop", id),
     setBounds: (bounds) => ipcRenderer.invoke("browser-set-bounds", bounds),
     setVisible: (visible) => ipcRenderer.invoke("browser-set-visible", visible),
+    passwords: {
+      state: () => ipcRenderer.invoke("browser-passwords-state"),
+      save: (input) => ipcRenderer.invoke("browser-passwords-save", input),
+      remove: (origin, username) => ipcRenderer.invoke("browser-passwords-remove", origin, username),
+      reveal: (origin, username) => ipcRenderer.invoke("browser-passwords-reveal", origin, username),
+      revokeGrant: (origin) => ipcRenderer.invoke("browser-passwords-revoke", origin),
+      allowSaving: (origin) => ipcRenderer.invoke("browser-passwords-allow-saving", origin),
+      importCsv: (text) => ipcRenderer.invoke("browser-passwords-import", text),
+      onOffer: (cb) => {
+        const handler = (_: unknown, offer: BrowserPasswordOffer) => cb(offer)
+        ipcRenderer.on("browser-password-offer", handler)
+        return () => ipcRenderer.removeListener("browser-password-offer", handler)
+      },
+      respondOffer: (id, action) => ipcRenderer.invoke("browser-passwords-offer", id, action),
+      onSignInRequest: (cb) => {
+        const handler = (_: unknown, request: BrowserSignInRequest) => cb(request)
+        ipcRenderer.on("browser-sign-in-request", handler)
+        return () => ipcRenderer.removeListener("browser-sign-in-request", handler)
+      },
+      respondSignIn: (id, answer) => ipcRenderer.invoke("browser-sign-in-answer", id, answer),
+    },
     bookmarks: {
       list: () => ipcRenderer.invoke("browser-bookmarks-list"),
       add: (items) => ipcRenderer.invoke("browser-bookmarks-add", items),

@@ -20,6 +20,18 @@ import {
 } from "./browser-panel"
 import { addBookmarks, listBookmarks, removeBookmark } from "./browser-bookmarks"
 import { listImportProfiles, readImportProfile } from "./bookmarks-import"
+import {
+  findEntries,
+  loadVault,
+  parseChromeCsv,
+  passwordState,
+  removeEntry,
+  respondToOffer,
+  respondToSignIn,
+  siteOrigin,
+  updateVault,
+  upsertEntry,
+} from "./browser-passwords"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
@@ -346,6 +358,45 @@ export function registerIpcHandlers(deps: Deps) {
   )
   ipcMain.handle("browser-bookmarks-remove", (_event: IpcMainInvokeEvent, url: string) =>
     typeof url === "string" ? removeBookmark(url) : listBookmarks(),
+  )
+  // Passwords: the renderer only ever receives one password, from an explicit reveal.
+  const text = (value: unknown) => (typeof value === "string" ? value : "")
+  ipcMain.handle("browser-passwords-state", () => passwordState())
+  ipcMain.handle("browser-passwords-save", (_event: IpcMainInvokeEvent, input: Record<string, unknown> | undefined) => {
+    const origin = siteOrigin(text(input?.origin))
+    if (!origin || !input || !text(input.password)) return passwordState()
+    const entry = {
+      origin,
+      username: text(input.username),
+      password: text(input.password),
+      previous: typeof input.previous === "string" ? input.previous : undefined,
+    }
+    return passwordState(updateVault((data) => upsertEntry(data, entry).data))
+  })
+  ipcMain.handle("browser-passwords-remove", (_event: IpcMainInvokeEvent, origin: unknown, username: unknown) =>
+    passwordState(updateVault((data) => removeEntry(data, text(origin), text(username)))),
+  )
+  ipcMain.handle(
+    "browser-passwords-reveal",
+    (_event: IpcMainInvokeEvent, origin: unknown, username: unknown) =>
+      findEntries(loadVault(), text(origin)).find((entry) => entry.username === text(username))?.password,
+  )
+  ipcMain.handle("browser-passwords-revoke", (_event: IpcMainInvokeEvent, origin: unknown) =>
+    passwordState(updateVault((data) => ({ ...data, grants: data.grants.filter((item) => item !== text(origin)) }))),
+  )
+  ipcMain.handle("browser-passwords-allow-saving", (_event: IpcMainInvokeEvent, origin: unknown) =>
+    passwordState(updateVault((data) => ({ ...data, never: data.never.filter((item) => item !== text(origin)) }))),
+  )
+  ipcMain.handle("browser-passwords-import", (_event: IpcMainInvokeEvent, csv: unknown) => {
+    const rows = parseChromeCsv(text(csv))
+    const state = passwordState(updateVault((data) => rows.reduce((acc, row) => upsertEntry(acc, row).data, data)))
+    return { state, count: rows.length }
+  })
+  ipcMain.handle("browser-passwords-offer", (_event: IpcMainInvokeEvent, id: unknown, action: unknown) =>
+    respondToOffer(text(id), action === "save" || action === "never" ? action : "dismiss"),
+  )
+  ipcMain.handle("browser-sign-in-answer", (_event: IpcMainInvokeEvent, id: unknown, answer: unknown) =>
+    respondToSignIn(text(id), answer === "always" || answer === "once" ? answer : "no"),
   )
   ipcMain.handle("browser-bookmarks-profiles", () => listImportProfiles())
   ipcMain.handle("browser-bookmarks-import", async (_event: IpcMainInvokeEvent, id: string) =>

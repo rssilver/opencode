@@ -5,6 +5,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import { write as writeLog } from "../logging"
+import { browserSignInTool } from "./browser-sign-in"
 import { browserTools } from "./browser-tools"
 import { previewTools, stopAllPreviews } from "./preview-tools"
 import { runTool, type Tool } from "./tool"
@@ -13,7 +14,7 @@ const MAX_BODY = 1024 * 1024
 
 export type AgentToolsServer = { url: string; token: string; stop: () => Promise<void> }
 
-const tools: Tool[] = [...browserTools, ...previewTools]
+const tools: Tool[] = [...browserTools, browserSignInTool, ...previewTools]
 
 /**
  * Starts the local MCP server that exposes the desktop app's browser panel and dev-server
