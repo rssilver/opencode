@@ -34,6 +34,13 @@ const api: ElectronAPI = {
     stop: (id) => ipcRenderer.invoke("browser-stop", id),
     setBounds: (bounds) => ipcRenderer.invoke("browser-set-bounds", bounds),
     setVisible: (visible) => ipcRenderer.invoke("browser-set-visible", visible),
+    bookmarks: {
+      list: () => ipcRenderer.invoke("browser-bookmarks-list"),
+      add: (items) => ipcRenderer.invoke("browser-bookmarks-add", items),
+      remove: (url) => ipcRenderer.invoke("browser-bookmarks-remove", url),
+      listImportProfiles: () => ipcRenderer.invoke("browser-bookmarks-profiles"),
+      importProfile: (id) => ipcRenderer.invoke("browser-bookmarks-import", id),
+    },
   },
   killSidecar: () => ipcRenderer.invoke("kill-sidecar"),
   installCli: () => ipcRenderer.invoke("install-cli"),

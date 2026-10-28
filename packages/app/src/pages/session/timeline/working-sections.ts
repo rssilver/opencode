@@ -27,6 +27,9 @@ export type BuildDisplayRowsInput = {
   // True for a row whose work is still in progress (running tool, streaming text or
   // thinking). It stays inline; finished rows of a running turn fold as they complete.
   isUnfinished?: (row: TimelineRow.TimelineRow) => boolean
+  // True for a row that must stay visible under the final answer even though it is finished
+  // work (e.g. the end-of-turn wrap_up card).
+  isPinned?: (row: TimelineRow.TimelineRow) => boolean
 }
 
 const hasUserMessageID = (row: TimelineRow.TimelineRow): row is TimelineRow.TimelineRow & { userMessageID: string } =>
@@ -50,6 +53,7 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
   const isExpanded = input.isExpanded ?? (() => false)
   const isBoundary = input.isBoundary ?? ((row) => row._tag === "UserMessage")
   const isUnfinished = input.isUnfinished ?? (() => false)
+  const isPinned = input.isPinned ?? (() => false)
   const durationForRow =
     input.durationForRow ??
     ((row) => {
@@ -99,7 +103,7 @@ export function buildDisplayRows(input: BuildDisplayRowsInput): DisplayRow[] {
     const row = rows[i]
     // Boundaries (user messages), visible responses and unfinished work always render
     // inline; everything else folds, including finished work of a turn that is still running.
-    if (isBoundary(row) || (isResponse(row) && visible.has(i)) || isUnfinished(row)) {
+    if (isBoundary(row) || (isResponse(row) && visible.has(i)) || isUnfinished(row) || isPinned(row)) {
       flushRun(i)
       result.push({ kind: "row", key: TimelineRow.key(row), row })
       continue

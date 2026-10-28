@@ -9,6 +9,7 @@ import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
+import { DialogAddModel } from "../dialog-add-model"
 import { DialogCustomProvider } from "../dialog-custom-provider"
 import { SettingsListV2 } from "./parts/list"
 import "./settings-v2.css"
@@ -92,6 +93,23 @@ export const SettingsProvidersV2: Component<{
     if (provider.npm !== "@ai-sdk/openai-compatible") return false
     if (!provider.models || Object.keys(provider.models).length === 0) return false
     return true
+  }
+
+  const editCustom = (item: ProviderItem) => {
+    const config = serverSync().data.config.provider?.[item.id]
+    if (!config) return
+    dialog.show(() => (
+      <DialogCustomProvider
+        onBack={dialog.close}
+        edit={{ providerID: item.id, config: { ...config, env: config.env, blacklist: config.blacklist?.slice() } }}
+      />
+    ))
+  }
+
+  const addModel = (item: ProviderItem) => {
+    dialog.show(() => (
+      <DialogAddModel providerID={item.id} providerName={item.name} existing={Object.keys(item.models)} />
+    ))
   }
 
   const disableProvider = async (providerID: string, name: string) => {
@@ -181,9 +199,25 @@ export const SettingsProvidersV2: Component<{
                         </span>
                       }
                     >
-                      <ButtonV2 size="normal" variant="ghost-muted" onClick={() => void disconnect(item.id, item.name)}>
-                        {language.t("common.disconnect")}
-                      </ButtonV2>
+                      <div class="flex items-center gap-1">
+                        <Show when={protocol() === "v1"}>
+                          <ButtonV2 size="normal" variant="ghost-muted" onClick={() => addModel(item)}>
+                            {language.t("provider.addModel.action")}
+                          </ButtonV2>
+                        </Show>
+                        <Show when={protocol() === "v1" && isConfigCustom(item.id)}>
+                          <ButtonV2 size="normal" variant="ghost-muted" onClick={() => editCustom(item)}>
+                            {language.t("common.edit")}
+                          </ButtonV2>
+                        </Show>
+                        <ButtonV2
+                          size="normal"
+                          variant="ghost-muted"
+                          onClick={() => void disconnect(item.id, item.name)}
+                        >
+                          {language.t("common.disconnect")}
+                        </ButtonV2>
+                      </div>
                     </Show>
                   </div>
                 )}

@@ -73,9 +73,13 @@ The small card some AI coding apps show when a turn ends: a 2–3 sentence recap
 not done or verified, then at most one question with 1–2 reply buttons (e.g. "Closed it" / "Test later").
 Clicking a button sends its canned reply as the user's next message; the user can always type instead.
 - **Model side:** a `wrap_up` tool (recap, optional question, up to 2 actions `{label, message}`) the model
-  calls once at the end of a turn, plus a short system-prompt rule for when to call it (after multi-step
-  work; skip for plain answers). opencode's existing `question` tool covers "ask and wait"; this is the
-  lighter end-of-turn version.
+  calls once at the end of a turn, plus a short system-prompt rule for when to call it. opencode's existing
+  `question` tool covers "ask and wait"; this is the lighter end-of-turn version.
+- **Only when needed (user decision):** the model calls it only when the turn leaves the user a real
+  decision or next step (approve a commit, pick between two fixes, test something by hand) or after long
+  multi-step work where a recap helps. Plain answers, small edits and chat get no card. No question → no
+  buttons; a recap alone only after multi-step work. The tool description and system rule say this
+  explicitly, and the app never adds a card on its own.
 - **App side:** render the tool part as a card pinned under the last answer (not inside the "Worked for"
   group), with the recap text, the question and buttons; disable the buttons once one is used or the user
   types something else; the recap doubles as the session's status line in the sidebar.

@@ -717,6 +717,7 @@ export function renderable(part: PartType, showReasoningSummaries = true) {
   if (part.type === "tool") {
     if (HIDDEN_TOOLS.has(part.tool)) return false
     if (part.tool === "question") return part.state.status !== "pending" && part.state.status !== "running"
+    if (part.tool === "wrap_up") return part.state.status === "completed"
     return true
   }
   if (part.type === "text") return !!part.text?.trim()
@@ -1586,6 +1587,15 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const i18n = useI18n()
   const part = () => props.part as ToolPart
   if (part().tool === "todowrite") return null
+  if (part().tool === "wrap_up") {
+    return (
+      <Show when={part().state.status === "completed"}>
+        <div data-component="tool-part-wrapper" data-timeline-part-id={part().id}>
+          <WrapUpCard part={part()} />
+        </div>
+      </Show>
+    )
+  }
 
   const hideQuestion = createMemo(
     () => part().tool === "question" && (part().state.status === "pending" || part().state.status === "running"),
@@ -2729,6 +2739,60 @@ ToolRegistry.register({
     )
   },
 })
+
+type WrapUpAction = { label: string; message: string }
+
+// End-of-turn card: recap, optional question and up to two reply buttons. Buttons send their
+// message as the next prompt, and are disabled once used or once the turn is no longer the latest.
+function WrapUpCard(props: { part: ToolPart }) {
+  const data = useData()
+  const i18n = useI18n()
+  const [state, setState] = createStore({ sent: false })
+  const recap = () => String(props.part.state.input.recap ?? "")
+  const question = () => {
+    const value = props.part.state.input.question
+    return typeof value === "string" ? value : ""
+  }
+  const actions = () => ((props.part.state.input.actions ?? []) as WrapUpAction[]).slice(0, 2)
+  const latest = createMemo(() => {
+    const messages = data.store.message?.[props.part.sessionID] ?? []
+    const parent = messages.find((message) => message.id === props.part.messageID)
+    const newest = messages.findLast((message) => message.role === "user")
+    if (!parent || parent.role !== "assistant" || !newest) return true
+    return newest.id === parent.parentID
+  })
+  const disabled = () => state.sent || !latest() || !data.sendReply
+
+  const send = (message: string) => {
+    setState("sent", true)
+    data.sendReply?.(message).catch(() => setState("sent", false))
+  }
+
+  return (
+    <div data-component="wrap-up-card" aria-label={i18n.t("ui.wrapUp.label")}>
+      <div data-slot="wrap-up-recap">{recap()}</div>
+      <Show when={question()}>
+        <div data-slot="wrap-up-question">{question()}</div>
+        <Show when={actions().length > 0}>
+          <div data-slot="wrap-up-actions">
+            <For each={actions()}>
+              {(action, index) => (
+                <ButtonV2
+                  size="small"
+                  variant={index() === 0 ? "contrast" : "outline"}
+                  disabled={disabled()}
+                  onClick={() => send(action.message)}
+                >
+                  {action.label}
+                </ButtonV2>
+              )}
+            </For>
+          </div>
+        </Show>
+      </Show>
+    </div>
+  )
+}
 
 ToolRegistry.register({
   name: "skill",

@@ -9,6 +9,7 @@ import { useLanguage } from "@/context/language"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { DialogConnectProvider, useProviderConnectController } from "./dialog-connect-provider"
+import { DialogAddModel } from "./dialog-add-model"
 import { DialogCustomProvider } from "./dialog-custom-provider"
 import { SettingsList } from "./settings-list"
 import { SettingsServerPicker, SettingsServerScope } from "./settings-server-picker"
@@ -97,6 +98,23 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
     return true
   }
 
+  const editCustom = (item: ProviderItem) => {
+    const config = serverSync().data.config.provider?.[item.id]
+    if (!config) return
+    dialog.show(() => (
+      <DialogCustomProvider
+        onBack={dialog.close}
+        edit={{ providerID: item.id, config: { ...config, env: config.env, blacklist: config.blacklist?.slice() } }}
+      />
+    ))
+  }
+
+  const addModel = (item: ProviderItem) => {
+    dialog.show(() => (
+      <DialogAddModel providerID={item.id} providerName={item.name} existing={Object.keys(item.models)} />
+    ))
+  }
+
   const disableProvider = async (providerID: string, name: string) => {
     if (protocol() !== "v1") return
     const before = serverSync().data.config.disabled_providers ?? []
@@ -182,9 +200,21 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
                         </span>
                       }
                     >
-                      <Button size="large" variant="ghost" onClick={() => void disconnect(item.id, item.name)}>
-                        {language.t("common.disconnect")}
-                      </Button>
+                      <div class="flex items-center gap-1">
+                        <Show when={protocol() === "v1"}>
+                          <Button size="large" variant="ghost" onClick={() => addModel(item)}>
+                            {language.t("provider.addModel.action")}
+                          </Button>
+                        </Show>
+                        <Show when={protocol() === "v1" && isConfigCustom(item.id)}>
+                          <Button size="large" variant="ghost" onClick={() => editCustom(item)}>
+                            {language.t("common.edit")}
+                          </Button>
+                        </Show>
+                        <Button size="large" variant="ghost" onClick={() => void disconnect(item.id, item.name)}>
+                          {language.t("common.disconnect")}
+                        </Button>
+                      </div>
                     </Show>
                   </div>
                 )}

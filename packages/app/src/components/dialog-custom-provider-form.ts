@@ -156,3 +156,80 @@ const nextRow = () => `row-${row++}`
 
 export const modelRow = (): ModelRow => ({ row: nextRow(), id: "", name: "", err: {} })
 export const headerRow = (): HeaderRow => ({ row: nextRow(), key: "", value: "", err: {} })
+
+type ProviderConfigLike = {
+  name?: string
+  env?: readonly string[]
+  options?: { baseURL?: string; headers?: Record<string, string> } & Record<string, unknown>
+  models?: Record<string, { name?: string } | undefined>
+}
+
+/** Build an editable form from an existing config entry. The API key lives in auth storage, so it stays blank. */
+export function formFromConfig(providerID: string, config: ProviderConfigLike): FormState {
+  const models = Object.entries(config.models ?? {}).map(([id, m]) => ({ ...modelRow(), id, name: m?.name ?? id }))
+  const headers = Object.entries(config.options?.headers ?? {}).map(([key, value]) => ({
+    ...headerRow(),
+    key,
+    value,
+  }))
+  const env = config.env?.[0]
+  return {
+    providerID,
+    name: config.name ?? providerID,
+    baseURL: config.options?.baseURL ?? "",
+    apiKey: env ? `{env:${env}}` : "",
+    models: models.length ? models : [modelRow()],
+    headers: headers.length ? headers : [headerRow()],
+    err: {},
+  }
+}
+
+/**
+ * Config merges cannot delete keys, so models dropped while editing are hidden through the provider blacklist.
+ * Models that were re-added are taken back off it.
+ */
+export function editedBlacklist(existing: readonly string[] | undefined, previous: string[], current: string[]) {
+  const keep = (existing ?? []).filter((id) => !current.includes(id))
+  const removed = previous.filter((id) => !current.includes(id) && !keep.includes(id))
+  return [...keep, ...removed]
+}
+
+export function modelsURL(baseURL: string) {
+  return `${baseURL.trim().replace(/\/+$/, "")}/models`
+}
+
+/** Accepts the OpenAI list shape `{ data: [{ id }] }`, plus `{ models: [...] }` and bare arrays. */
+export function parseModelsResponse(json: unknown): string[] {
+  const list = Array.isArray(json)
+    ? json
+    : json && typeof json === "object"
+      ? ((json as { data?: unknown }).data ?? (json as { models?: unknown }).models)
+      : undefined
+  if (!Array.isArray(list)) return []
+  const ids = list.flatMap((item): string[] => {
+    if (typeof item === "string") return [item]
+    if (!item || typeof item !== "object") return []
+    const value = (item as { id?: unknown }).id ?? (item as { name?: unknown }).name
+    return typeof value === "string" && value.trim() ? [value.trim()] : []
+  })
+  return [...new Set(ids)]
+}
+
+export function modelsRequestHeaders(input: {
+  apiKey: string
+  headers: { key: string; value: string }[]
+}): Record<string, string> {
+  const key = input.apiKey.trim()
+  const custom = input.headers.map((h) => [h.key.trim(), h.value.trim()] as const).filter(([k, v]) => !!k && !!v)
+  return {
+    ...(key && !/^\{env:[^}]+\}$/.test(key) ? { Authorization: `Bearer ${key}` } : {}),
+    ...Object.fromEntries(custom),
+  }
+}
+
+/** Drops blank rows, keeps rows whose id is already present, and appends the rest. */
+export function mergeFetchedModels(rows: ModelRow[], ids: string[]): ModelRow[] {
+  const kept = rows.filter((r) => r.id.trim() || r.name.trim())
+  const known = new Set(kept.map((r) => r.id.trim()))
+  return [...kept, ...ids.filter((id) => !known.has(id)).map((id) => ({ ...modelRow(), id, name: id }))]
+}

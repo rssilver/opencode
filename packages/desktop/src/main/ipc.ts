@@ -3,7 +3,7 @@ import { stat } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron"
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
-import type { BrowserBounds } from "@opencode-ai/app/browser"
+import type { BrowserBookmark, BrowserBounds } from "@opencode-ai/app/browser"
 import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
 import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
 
@@ -18,6 +18,8 @@ import {
   setBrowserBounds,
   setBrowserVisible,
 } from "./browser-panel"
+import { addBookmarks, listBookmarks, removeBookmark } from "./browser-bookmarks"
+import { listImportProfiles, readImportProfile } from "./bookmarks-import"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
@@ -338,6 +340,17 @@ export function registerIpcHandlers(deps: Deps) {
     const win = browserWindow(event)
     if (win) setBrowserVisible(win, visible === true)
   })
+  ipcMain.handle("browser-bookmarks-list", () => listBookmarks())
+  ipcMain.handle("browser-bookmarks-add", (_event: IpcMainInvokeEvent, items: BrowserBookmark[]) =>
+    addBookmarks(Array.isArray(items) ? items : []),
+  )
+  ipcMain.handle("browser-bookmarks-remove", (_event: IpcMainInvokeEvent, url: string) =>
+    typeof url === "string" ? removeBookmark(url) : listBookmarks(),
+  )
+  ipcMain.handle("browser-bookmarks-profiles", () => listImportProfiles())
+  ipcMain.handle("browser-bookmarks-import", async (_event: IpcMainInvokeEvent, id: string) =>
+    addBookmarks(typeof id === "string" ? await readImportProfile(id) : []),
+  )
   ipcMain.handle("run-desktop-menu-action", (event: IpcMainInvokeEvent, action: DesktopMenuAction) => {
     runDesktopMenuAction(BrowserWindow.fromWebContents(event.sender), action, {
       checkForUpdates: () => void deps.showUpdater(),

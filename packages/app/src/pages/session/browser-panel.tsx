@@ -3,7 +3,8 @@ import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
-import type { BrowserBounds, BrowserState } from "@/browser"
+import type { BrowserBookmark, BrowserBounds, BrowserState } from "@/browser"
+import { BookmarksMenu, BookmarkStar } from "./browser-bookmarks"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
@@ -19,9 +20,11 @@ export function BrowserPanel(props: { onClose?: () => void }) {
     state: { tabs: [] } as BrowserState,
     address: "",
     editing: false,
+    bookmarks: [] as BrowserBookmark[],
   })
 
   const active = createMemo(() => store.state.tabs.find((tab) => tab.id === store.state.active))
+  const saved = createMemo(() => store.bookmarks.some((item) => item.url === active()?.url))
   const shownAddress = () => (store.editing ? store.address : (active()?.url ?? ""))
 
   onMount(() => {
@@ -32,6 +35,7 @@ export function BrowserPanel(props: { onClose?: () => void }) {
       if (state.tabs.length === 0) void browser.createTab()
     })
     void browser.setVisible(true)
+    void browser.bookmarks.list().then((items) => setStore("bookmarks", items))
 
     // The native view sits above the page, so it must follow the placeholder exactly.
     let last: BrowserBounds | undefined
@@ -189,6 +193,27 @@ export function BrowserPanel(props: { onClose?: () => void }) {
               }}
               onBlur={() => setStore("editing", false)}
               onInput={(event) => setStore("address", event.currentTarget.value)}
+            />
+            <BookmarkStar
+              saved={saved()}
+              disabled={!active()?.url}
+              onToggle={() => {
+                const tab = active()
+                if (!tab?.url) return
+                void (saved()
+                  ? api().bookmarks.remove(tab.url)
+                  : api().bookmarks.add([{ title: tab.title || tab.url, url: tab.url, folder: "" }])
+                ).then((items) => setStore("bookmarks", items))
+              }}
+            />
+            <BookmarksMenu
+              api={api()}
+              bookmarks={store.bookmarks}
+              onChange={(items) => setStore("bookmarks", items)}
+              onOpen={(url) => {
+                const tab = active()
+                if (tab) void api().navigate(tab.id, url)
+              }}
             />
           </form>
 

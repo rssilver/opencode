@@ -124,6 +124,7 @@ const layer = Layer.effect(
             ...Object.fromEntries(whitelistedDirs.map((dir) => [dir, "allow"])),
           },
           question: "deny",
+          wrap_up: "deny",
           plan_enter: "deny",
           plan_exit: "deny",
           // mirrors github.com/github/gitignore Node.gitignore pattern for .env files
@@ -146,6 +147,7 @@ const layer = Layer.effect(
               defaults,
               Permission.fromConfig({
                 question: "allow",
+                wrap_up: "allow",
                 plan_enter: "allow",
               }),
               user,
@@ -161,6 +163,7 @@ const layer = Layer.effect(
               defaults,
               Permission.fromConfig({
                 question: "allow",
+                wrap_up: "allow",
                 plan_exit: "allow",
                 task: {
                   general: "deny",

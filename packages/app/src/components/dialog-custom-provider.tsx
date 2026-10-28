@@ -6,16 +6,32 @@ import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { useMutation } from "@tanstack/solid-query"
 import { TextField } from "@opencode-ai/ui/text-field"
 import { showToast } from "@/utils/toast"
-import { batch, For } from "solid-js"
+import { batch, For, Show } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
-import { type FormState, headerRow, modelRow, validateCustomProvider } from "./dialog-custom-provider-form"
+import { usePlatform } from "@/context/platform"
+import {
+  type FormState,
+  editedBlacklist,
+  formFromConfig,
+  headerRow,
+  mergeFetchedModels,
+  modelRow,
+  modelsRequestHeaders,
+  modelsURL,
+  parseModelsResponse,
+  validateCustomProvider,
+} from "./dialog-custom-provider-form"
+
+type Initial = Parameters<typeof formFromConfig>
 
 type Props = {
   onBack: () => void
+  /** Edit an existing config entry instead of creating a new one. */
+  edit?: { providerID: Initial[0]; config: Initial[1] & { blacklist?: string[] } }
 }
 
 export function DialogCustomProvider(props: Props) {
@@ -35,26 +51,62 @@ export function DialogCustomProvider(props: Props) {
       }
       transition
     >
-      <CustomProviderForm />
+      <CustomProviderForm edit={props.edit} />
     </Dialog>
   )
 }
 
-export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
+export function CustomProviderForm(props: { autofocus?: boolean; edit?: Props["edit"] } = {}) {
   const dialog = useDialog()
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
   const language = useLanguage()
+  const platform = usePlatform()
+  const editing = props.edit
+  const previousModels = Object.keys(editing?.config.models ?? {})
 
-  const [form, setForm] = createStore<FormState>({
-    providerID: "",
-    name: "",
-    baseURL: "",
-    apiKey: "",
-    models: [modelRow()],
-    headers: [headerRow()],
-    err: {},
-  })
+  const [form, setForm] = createStore<FormState>(
+    editing
+      ? formFromConfig(editing.providerID, editing.config)
+      : {
+          providerID: "",
+          name: "",
+          baseURL: "",
+          apiKey: "",
+          models: [modelRow()],
+          headers: [headerRow()],
+          err: {},
+        },
+  )
+  const [fetchState, setFetchState] = createStore<{ loading: boolean; error?: string }>({ loading: false })
+
+  // A direct request from the renderer: localhost servers (Ollama, LM Studio) must allow this origin via CORS.
+  const fetchModels = async () => {
+    const baseURL = form.baseURL.trim()
+    if (!/^https?:\/\//.test(baseURL)) {
+      setForm("err", "baseURL", language.t("provider.custom.error.baseURL.format"))
+      return
+    }
+    setFetchState({ loading: true, error: undefined })
+    const response = await (platform.fetch ?? fetch)(modelsURL(baseURL), {
+      headers: modelsRequestHeaders({ apiKey: form.apiKey, headers: form.headers }),
+    }).catch(() => undefined)
+    if (!response)
+      return setFetchState({ loading: false, error: language.t("provider.custom.models.fetch.error.network") })
+    if (!response.ok)
+      return setFetchState({
+        loading: false,
+        error: language.t("provider.custom.models.fetch.error.status", { status: response.status }),
+      })
+    const ids = parseModelsResponse(await response.json().catch(() => undefined))
+    if (!ids.length)
+      return setFetchState({ loading: false, error: language.t("provider.custom.models.fetch.error.empty") })
+    const rows = mergeFetchedModels(form.models, ids)
+    batch(() => {
+      setForm("models", rows.length ? rows : [modelRow()])
+      setFetchState({ loading: false, error: undefined })
+    })
+  }
 
   const addModel = () => {
     setForm(
@@ -119,7 +171,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
       form,
       t: language.t,
       disabledProviders: serverSync().data.config.disabled_providers ?? [],
-      existingProviderIDs: new Set(serverSync().data.provider.all.keys()),
+      existingProviderIDs: editing ? new Set<string>() : new Set(serverSync().data.provider.all.keys()),
     })
     batch(() => {
       setForm("err", output.err)
@@ -146,7 +198,14 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
       }
 
       await serverSync().updateConfig({
-        provider: { [result.providerID]: result.config },
+        provider: {
+          [result.providerID]: editing
+            ? {
+                ...result.config,
+                blacklist: editedBlacklist(editing.config.blacklist, previousModels, Object.keys(result.config.models)),
+              }
+            : result.config,
+        },
         disabled_providers: nextDisabled,
       })
       return result
@@ -179,7 +238,11 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
     <div class="flex flex-col gap-6 px-2.5 pb-3 overflow-y-auto max-h-[60vh]">
       <div class="px-2.5 flex gap-4 items-center">
         <ProviderIcon id="synthetic" class="size-5 shrink-0 icon-strong-base" />
-        <div class="text-16-medium text-text-strong">{language.t("provider.custom.title")}</div>
+        <div class="text-16-medium text-text-strong">
+          {editing
+            ? language.t("provider.custom.edit.title", { provider: editing.config.name ?? editing.providerID })
+            : language.t("provider.custom.title")}
+        </div>
       </div>
 
       <form onSubmit={save} class="px-2.5 pb-6 flex flex-col gap-6">
@@ -193,7 +256,8 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
 
         <div class="flex flex-col gap-4">
           <TextField
-            autofocus={props.autofocus ?? true}
+            autofocus={props.autofocus ?? !editing}
+            disabled={!!editing}
             label={language.t("provider.custom.field.providerID.label")}
             placeholder={language.t("provider.custom.field.providerID.placeholder")}
             description={language.t("provider.custom.field.providerID.description")}
@@ -266,9 +330,26 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
               </div>
             )}
           </For>
-          <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addModel} class="self-start">
-            {language.t("provider.custom.models.add")}
-          </Button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addModel}>
+              {language.t("provider.custom.models.add")}
+            </Button>
+            <Button
+              type="button"
+              size="small"
+              variant="ghost"
+              icon="download"
+              onClick={() => void fetchModels()}
+              disabled={fetchState.loading}
+            >
+              {fetchState.loading
+                ? language.t("provider.custom.models.fetch.loading")
+                : language.t("provider.custom.models.fetch")}
+            </Button>
+          </div>
+          <Show when={fetchState.error}>
+            {(message) => <p class="text-12-regular text-text-critical-base">{message()}</p>}
+          </Show>
         </div>
 
         <div class="flex flex-col gap-3">

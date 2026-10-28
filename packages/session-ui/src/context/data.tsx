@@ -46,6 +46,9 @@ export type NavigateToSessionFn = (sessionID: string) => void
 
 export type SessionHrefFn = (sessionID: string) => string
 
+// Sends text as the user's next prompt in the viewed session; rejects when sending fails.
+export type SendReplyFn = (text: string) => Promise<void>
+
 export const { use: useData, provider: DataProvider } = createSimpleContext({
   name: "Data",
   init: (props: {
@@ -54,6 +57,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
     sessionID?: string
     onNavigateToSession?: NavigateToSessionFn
     onSessionHref?: SessionHrefFn
+    onSendReply?: SendReplyFn
   }) => {
     return {
       get store() {
@@ -67,6 +71,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
       },
       navigateToSession: props.onNavigateToSession,
       sessionHref: props.onSessionHref,
+      sendReply: props.onSendReply,
     }
   },
 })

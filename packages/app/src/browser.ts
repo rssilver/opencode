@@ -20,7 +20,30 @@ export type BrowserBounds = {
   height: number
 }
 
+export type BrowserBookmark = {
+  title: string
+  url: string
+  /** Folder path joined with " / "; empty for top-level bookmarks. */
+  folder: string
+}
+
+/** A Chrome or Edge profile whose bookmarks can be imported. */
+export type BrowserImportProfile = {
+  id: string
+  browser: "chrome" | "edge"
+  name: string
+}
+
 export type BrowserPlatform = {
+  bookmarks: {
+    list(): Promise<BrowserBookmark[]>
+    /** Adds (or merges, deduplicating by URL) bookmarks; resolves to the full saved list. */
+    add(items: BrowserBookmark[]): Promise<BrowserBookmark[]>
+    remove(url: string): Promise<BrowserBookmark[]>
+    listImportProfiles(): Promise<BrowserImportProfile[]>
+    /** Imports a profile's bookmarks (never cookies or passwords); resolves to the full saved list. */
+    importProfile(id: string): Promise<BrowserBookmark[]>
+  }
   getState(): Promise<BrowserState>
   /** Subscribe to tab state changes; returns an unsubscribe function. */
   subscribe(cb: (state: BrowserState) => void): () => void

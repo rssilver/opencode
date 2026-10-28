@@ -158,3 +158,22 @@ describe("buildDisplayRows", () => {
     }
   })
 })
+
+describe("buildDisplayRows pinned rows", () => {
+  test("a pinned wrap-up row stays visible under the final answer instead of folding", () => {
+    const rows = [
+      new TimelineRow.UserMessage({ userMessageID: "u1", anchor: true }),
+      part("a1", "tool0"), // finished work -> folds
+      part("a1", "r0"), // final answer -> visible
+      part("a1", "wrap"), // wrap_up card -> pinned
+    ]
+    const isPinned = isResponse("wrap")
+    const result = buildDisplayRows({ rows, isResponse: isResponse("r0"), isPinned })
+    expect(result.map((item) => item.kind)).toEqual(["row", "section", "row", "row"])
+    const last = result.at(-1)
+    expect(last?.kind === "row" && last.row._tag === "AssistantPart" && last.row.group.key).toBe("part:a1:wrap")
+
+    const folded = buildDisplayRows({ rows, isResponse: isResponse("r0") })
+    expect(folded.map((item) => item.kind)).toEqual(["row", "section", "row", "section"])
+  })
+})

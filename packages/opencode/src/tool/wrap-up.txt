@@ -1,0 +1,16 @@
+Show the user a compact end-of-turn card: a short recap and, only if a decision is pending, one question with up to two reply buttons. Clicking a button sends its `message` as the user's next reply. This tool returns immediately and does not wait for an answer.
+
+Use this tool ONLY when it helps the user, that is when the turn leaves them a real decision or next step, or after long multi-step work where a recap is worth reading:
+- DO call it: you changed code and the user should approve a commit ("Commit these changes?" -> "Commit" / "Not yet").
+- DO call it: two reasonable fixes exist and the user must pick ("Which fix first?").
+- DO call it: the user has to test something by hand ("Did the new flow work for you?" -> "Works" / "Still broken").
+- DO call it (recap only, no question) after a long task with many steps, to state what changed and what is not done or not verified.
+- DO NOT call it for plain answers, explanations, small one-step edits, greetings or conversation.
+- DO NOT call it just to summarize something that is already clear from your final message.
+- DO NOT invent a question. If nothing is pending, omit `question` and `actions` entirely.
+
+Rules:
+- Call it at most once per turn, as the very last action, after all other work is done. Do not write further text after it.
+- `recap`: 2-3 short sentences saying what is now true or changed and what is not done or not verified.
+- `question`: one short sentence for the single decision the user must make. No reasons or recommendations in it.
+- `actions`: 1-2 buttons, only together with a `question`. `label` is 1-3 words; `message` is the exact text sent as the user's reply. Put your recommended choice first.

@@ -406,3 +406,26 @@ per-turn final-answer grouping from them is included here.
 - Verification: `bun typecheck` passes in packages/app and packages/opencode; app timeline tests 39 pass;
   opencode retitle/prompt/session tests pass. Not verified live: the glyph's frame cycling (computed style
   showed only the first frame in a quick check) and a real re-title through the loop.
+
+## 2026-10-28 — Models/providers in the app, browser bookmarks, next-step cards
+
+- **app (providers)** — Custom provider dialog gets "Fetch models" (`GET {baseURL}/models`, direct request;
+  local servers need CORS allowed, e.g. LM Studio's toggle), edit mode for config-defined OpenAI-compatible
+  providers, and a new "Add model" dialog for connected providers (limits, vision/tool/reasoning toggles →
+  `provider.<id>.models.<model>`). On v1 and v2 settings. Removal stays via Disconnect (config merges can't
+  delete keys); env-connected providers don't get the new buttons yet. Files: `dialog-custom-provider*.ts(x)`,
+  `dialog-add-model*.ts(x)`, `settings-providers.tsx`, `settings-v2/providers.tsx`, `i18n/en.ts`.
+- **desktop + app (browser)** — Bookmarks for the built-in browser: import from Chrome/Edge profiles (reads only
+  `Bookmarks` / `Local State`, never cookies or passwords), star button, bookmarks menu by folder, stored in
+  `opencode.browser-bookmarks`. Files: `desktop/src/main/bookmarks-import.ts`, `browser-bookmarks.ts`, `ipc.ts`,
+  `preload/index.ts`, `app/src/browser.ts`, `pages/session/browser-bookmarks.tsx`, `browser-panel.tsx`.
+- **opencode + session-ui + app (next-step cards)** — New `wrap_up` tool (recap, optional question, ≤2 reply
+  buttons; returns immediately), only for app/desktop clients and the build/plan agents. Its description tells
+  the model to use it only when the user has a decision or step left. Rendered as a card under the final
+  answer, never folded into "Worked for"; a button sends its reply as the next prompt and disables after use or
+  once a newer turn exists. Files: `tool/wrap-up.ts|txt`, `tool/registry.ts`, `agent/agent.ts`,
+  `session-ui/.../message-part.tsx|css`, `session-ui/context/data.tsx`, `app/pages/directory-layout.tsx`,
+  `timeline/working-sections.ts`, `message-timeline.tsx`, `ui/src/i18n/en.ts`.
+- Verification: `bun typecheck` clean in app, opencode, desktop, session-ui. Tests: app session+components 243
+  pass; opencode `wrap-up` + `retitle` 9 pass; desktop bookmarks parser 2 pass. Not checked live: the new
+  dialogs, bookmarks UI in Electron, and whether models respect the wrap_up rule.

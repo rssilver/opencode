@@ -5,13 +5,15 @@ import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { type Accessor, createEffect, createMemo, createResource, onCleanup, type ParentProps, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { LocalProvider } from "@/context/local"
-import { SDKProvider } from "@/context/sdk"
+import { SDKProvider, useSDK } from "@/context/sdk"
+import { sendFollowupDraft } from "@/components/prompt-input/submit"
 import { useSync } from "@/context/sync"
 import { decode64 } from "@/utils/base64"
 import { Schema } from "effect"
 import type { ServerConnection } from "@/context/server"
 import { sessionHref } from "@/utils/session-route"
 import { useServerSync } from "@/context/server-sync"
+import { formatServerError } from "@/utils/server-errors"
 
 export function DirectoryDataProvider(
   props: ParentProps<{
@@ -24,6 +26,8 @@ export function DirectoryDataProvider(
   const navigate = useNavigate()
   const params = useParams()
   const sync = useSync()
+  const sdk = useSDK()
+  const language = useLanguage()
   const serverSync = useServerSync()
   const directory = () => (typeof props.directory === "function" ? props.directory() : props.directory)
   const slug = createMemo(() => base64Encode(directory()))
@@ -41,6 +45,35 @@ export function DirectoryDataProvider(
     const path = location.pathname.slice(slug().length + 1)
     navigate(`/${base64Encode(next)}${path}${location.search}${location.hash}`, { replace: true })
   })
+
+  // Sends text as the next prompt, reusing the agent and model of the session's latest user message.
+  const sendReply = async (text: string) => {
+    const sessionID = params.id
+    const last = sessionID ? sync().data.message[sessionID]?.findLast((message) => message.role === "user") : undefined
+    if (!sessionID || last?.role !== "user") return
+    await sendFollowupDraft({
+      api: sdk().api.session,
+      sync: sync(),
+      serverSync: serverSync(),
+      draft: {
+        sessionID,
+        sessionDirectory: sdk().directory,
+        prompt: [{ type: "text", content: text, start: 0, end: text.length }],
+        context: [],
+        agent: last.agent,
+        model: { providerID: last.model.providerID, modelID: last.model.modelID },
+        variant: last.model.variant,
+      },
+      optimisticBusy: true,
+    }).catch((err) => {
+      showToast({
+        variant: "error",
+        title: language.t("common.requestFailed"),
+        description: formatServerError(err, language.t),
+      })
+      throw err
+    })
+  }
 
   createResource(
     () => params.id,
@@ -66,6 +99,7 @@ export function DirectoryDataProvider(
           sessionID={params.id}
           onNavigateToSession={(sessionID: string) => navigate(href(sessionID))}
           onSessionHref={href}
+          onSendReply={sendReply}
         >
           <LocalProvider>{props.children}</LocalProvider>
         </DataProvider>

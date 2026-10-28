@@ -1244,6 +1244,31 @@
   }
 }
 
+[data-component="wrap-up-card"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0.5px solid var(--v2-border-border-base);
+  border-radius: 8px;
+  background: var(--v2-background-bg-layer-02);
+  font-size: 13px;
+  line-height: var(--line-height-large);
+  color: var(--v2-text-text-muted);
+
+  [data-slot="wrap-up-question"] {
+    font-weight: var(--font-weight-medium);
+    color: var(--v2-text-text-base);
+  }
+
+  [data-slot="wrap-up-actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
 [data-component="question-answers"] {
   display: flex;
   flex-direction: column;

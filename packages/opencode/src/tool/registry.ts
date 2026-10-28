@@ -4,6 +4,7 @@ import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { PlanExitTool } from "./plan"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
+import { WrapUpTool } from "./wrap-up"
 import { ShellTool } from "./shell"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
@@ -107,6 +108,7 @@ const layer = Layer.effect(
     const viewImages = yield* ViewImagesTool
     const memory = yield* MemoryTool
     const question = yield* QuestionTool
+    const wrapUp = yield* WrapUpTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
@@ -209,6 +211,8 @@ const layer = Layer.effect(
         }
 
         const memoryEnabled = (yield* config.get()).memory?.enabled !== false
+        // the card only renders in the GUI clients
+        const wrapUpEnabled = ["app", "desktop"].includes(flags.client)
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
 
         const tool = yield* Effect.all({
@@ -228,6 +232,7 @@ const layer = Layer.effect(
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
           question: Tool.init(question),
+          wrapUp: Tool.init(wrapUp),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
           ...(codeModeTool ? { execute: Tool.init(codeModeTool) } : {}),
@@ -238,6 +243,7 @@ const layer = Layer.effect(
           builtin: [
             tool.invalid,
             ...(questionEnabled ? [tool.question] : []),
+            ...(wrapUpEnabled ? [tool.wrapUp] : []),
             tool.shell,
             tool.read,
             tool.viewImages,
