@@ -589,3 +589,23 @@ per-turn final-answer grouping from them is included here.
   pass (23). Desktop tests: 104 run, and the only failure is the pre-existing upstream `draft-store.test.ts`
   (`node:sqlite` is not available under Bun). `bun run build` + `bun run package` produced
   `packages/desktop/dist/opencode-desktop-win-x64.exe` (186 MB).
+
+### 2026-10-28 — Saved visual library with reuse and 6-month purge; todo #18
+
+- **opencode** — `show_visual` (`packages/opencode/src/tool/show-visual.ts`, `show-visual.txt`) now keeps a global
+  library at `<data>/visuals/library/<id>.html` (override: `OPENCODE_VISUALS_DIR`). Every visual is saved; a
+  one-line header comment holds title, description and `keep`. The file's modified time is "last used".
+- New parameters: `template` (show a saved visual again instead of sending `html`), `data` (JSON injected as
+  `window.VISUAL_DATA`, with `<` escaped), `name` (stable ID; saving again replaces it), `description`, `keep`.
+  Exactly one of `html` / `template` is required.
+- On tool load, visuals not used for 183 days are deleted unless `keep` is set; showing a saved visual again
+  counts as using it. The tool description lists up to 40 saved visuals (kept ones first) so the model can
+  reuse them.
+- Per-project copies under `<data>/visuals/<projectID>/` from the first version are no longer written (old
+  files are left in place).
+- **session-ui** — `visual-card.tsx` renders `metadata.html` (template plus data) when present, falling back to
+  `input.html`.
+- **docs** — `todo.md` #18: live local-model switching (load/unload), task-based swaps with #17, and local image
+  generation through ComfyUI/InvokeAI.
+- Verification: `bun test test/tool/show-visual.test.ts` (10 pass), `bun typecheck` clean in opencode and
+  session-ui.

@@ -15,4 +15,10 @@ Rules for `html`:
 - Label controls and axes clearly. Keep the total under about 400 KB.
 - Uncaught errors in the page are shown on the card; if the user reports one, fix it and call the tool again.
 
+Saving and reuse:
+- Every visual is saved automatically. Visuals not shown for about 6 months are deleted unless saved with `keep: true`.
+- To show a saved visual again, pass `template` with its ID (listed below, or returned when it was saved) and new `data` instead of `html`. Do this whenever a saved visual already does what is needed; do not rewrite it.
+- When a visual is worth reusing (a plotter, chart, calculator or simulation others could feed), make it data-driven: read its inputs from `window.VISUAL_DATA` (with sensible defaults when it is undefined), pass the current inputs as `data`, give it a stable `name` like "function-plotter", and a `description` that says what `data` it reads.
+- Set `keep: true` for general-purpose tools that should never be deleted, like a plotter. Saving with an existing `name` replaces that visual.
+
 After calling it, say in one or two sentences what the visual shows and how to use it; do not repeat its contents as text.

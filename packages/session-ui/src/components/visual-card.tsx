@@ -30,7 +30,11 @@ export function VisualCard(props: { part: ToolPart }) {
   const data = useData()
   const i18n = useI18n()
   const title = () => String(props.part.state.input.title ?? "Visual")
-  const html = () => String(props.part.state.input.html ?? "")
+  // The tool returns the final page in metadata (a saved template plus its data); older parts only have input.html.
+  const html = () => {
+    const metadata = props.part.state.status === "completed" ? props.part.state.metadata : undefined
+    return typeof metadata?.html === "string" ? metadata.html : String(props.part.state.input.html ?? "")
+  }
   const saved = () => {
     const metadata = props.part.state.status === "completed" ? props.part.state.metadata : undefined
     return typeof metadata?.path === "string" ? metadata.path : ""

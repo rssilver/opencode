@@ -333,3 +333,25 @@ Use cheaper/faster models for easy work and stronger ones for hard work, and kno
   together (e.g. "a 7B coder + an 8B vision model fit side by side; a 32B needs everything"), and whether
   the disk has room to download more. The router only picks local models that fit alongside what's loaded.
 - Effort: medium–high (routing rules + UI; the hardware math is estimates, labelled as such). Impact: high.
+
+### 18. Live local-model switching (load/unload on demand) + in-chat local image generation
+Local GPUs usually hold one big model at a time, so switching should unload the old model and load the new one
+mid-session without restarting anything.
+- **Switching:** picking another local model (from the model picker, a `/model` command, or the #17 router)
+  unloads the current one and loads the new one through the provider's own API: LM Studio's REST load/unload
+  endpoints or `lms load` / `lms unload`, Ollama's `keep_alive: 0` to unload plus a warm-up request to load.
+  Show a "Loading <model>… n%" status on the turn (LM Studio already reports load progress, see
+  `lmstudio-progress.ts`) and queue the prompt until it is ready. The conversation carries over: the new model
+  gets the same history, and compaction runs first if the history is too big for its context length.
+- **Task-based switching:** pairs with #17. The router can pick "vision model for this screenshot", "coder for
+  this edit", "small model for titles"; the capacity planner decides whether to swap or run them side by side.
+  Swaps cost seconds to minutes, so batch work per model and don't flip back and forth every turn.
+- **Local image generation in chat:** an `image_generate` tool backed by ComfyUI (HTTP + websocket API,
+  workflow JSON) or InvokeAI (REST queue API). When VRAM is short: unload the LLM, load the image model, run the
+  job, show the image in the chat (and save it), unload the image model, then reload the LLM and continue the
+  turn. The LLM writes the prompt/workflow settings before it is unloaded. Settings: server URL, default
+  workflow/model, and "free VRAM for images: always / only when needed / never".
+- **Safety:** show what will be unloaded before a swap that interrupts something else (another session or
+  app using the model); never kill processes the app didn't start.
+- Effort: medium–high (provider load/unload adapters, turn queuing, ComfyUI/Invoke client). Impact: high for
+  local-only setups.

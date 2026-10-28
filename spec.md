@@ -286,15 +286,22 @@ match `read` (`external_directory` + `read`).
 
 The model can answer with a live HTML/CSS/JS visual (simulation, graph, diagram, calculator) instead of only text.
 
-- **Tool** (`packages/opencode/src/tool/show-visual.ts`): `show_visual({ title, html })`, app/desktop clients only.
-  Display-only; keeps a copy at `<data>/visuals/<project id>/<slug>-<call id>.html`.
+- **Tool** (`packages/opencode/src/tool/show-visual.ts`): `show_visual({ title, html | template, data?, name?,
+  description?, keep? })`, app/desktop clients only. Display-only.
+- **Library**: every visual is saved globally at `<data>/visuals/library/<id>.html` (override `OPENCODE_VISUALS_DIR`),
+  with a header comment holding title, description and `keep`; the file's modified time is "last used". `name`
+  gives a stable ID (saving again replaces it); otherwise the ID is `<slug>-<time>`. `template` shows a saved visual
+  again and `data` is injected as `window.VISUAL_DATA`, so a reusable plotter only needs new data. On tool load,
+  visuals unused for 183 days are deleted unless `keep` is set; the description lists up to 40 saved visuals, kept
+  ones first. The card renders `metadata.html` (template plus data).
 - **Card** (`packages/session-ui/src/components/visual-card.tsx`): sandboxed iframe (`allow-scripts` only, `srcdoc`)
   with a CSP allowing only cdn.jsdelivr.net, cdnjs.cloudflare.com and unpkg.com and no other network. Theme CSS
   variables available to the visual: `--background`, `--surface`, `--text`, `--text-weak`, `--border`, `--accent`,
   `--success`, `--warning`, `--danger`, `--font-sans`, `--font-mono`. Auto height (max 640px) plus a resize handle.
 - **Actions**: Full screen, Reload, Source, Save (downloads the `.html`). Errors from the visual are listed on the card;
   "Ask to fix" sends them to the model.
-- Not yet: open in side panel, "Edit", a "Saved visuals" menu, automatic error reports without a click, screenshots
+- Not yet: open in side panel, "Edit", a "Saved visuals" browser in the UI (the model sees the list; the user can't
+  browse it yet), automatic error reports without a click, screenshots
   for the model, live theme switching without Reload.
 ### `video_watch` tool and `browser_video_watch` (watching videos)
 
