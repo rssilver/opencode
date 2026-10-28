@@ -63,6 +63,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Tampilkan semua",
   "ui.sessionTurn.diffs.showLess": "Tampilkan lebih sedikit",
   "ui.sessionTurn.diffs.more": "+{{count}} berkas lainnya",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "mencoba ulang",
   "ui.sessionTurn.retry.inSeconds": "dalam {{seconds}}dtk",

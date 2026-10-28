@@ -11,10 +11,17 @@ import { useFileComponent } from "@opencode-ai/ui/context/file"
 
 import { Binary } from "@opencode-ai/core/util/binary"
 import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
-import { createEffect, createMemo, createSignal, For, on, ParentProps, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, ParentProps, Show, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Dynamic } from "solid-js/web"
-import { AssistantParts, Message, MessageDivider, PART_MAPPING, type UserActions } from "./message-part"
+import {
+  AssistantParts,
+  Message,
+  MessageDivider,
+  PART_MAPPING,
+  type ThinkingCollapseMode,
+  type UserActions,
+} from "./message-part"
 import { Card } from "@opencode-ai/ui/card"
 import { Accordion } from "@opencode-ai/ui/accordion"
 import { StickyAccordionHeader } from "@opencode-ai/ui/sticky-accordion-header"
@@ -158,6 +165,7 @@ export function SessionTurn(
     actions?: UserActions
     showReasoningSummaries?: boolean
     shellToolDefaultOpen?: boolean
+    shellToolCollapseMode?: Accessor<ThinkingCollapseMode>
     editToolDefaultOpen?: boolean
     active?: boolean
     status?: SessionStatus
@@ -415,6 +423,7 @@ export function SessionTurn(
                     working={working()}
                     showReasoningSummaries={showReasoningSummaries()}
                     shellToolDefaultOpen={props.shellToolDefaultOpen}
+                    shellToolCollapseMode={props.shellToolCollapseMode}
                     editToolDefaultOpen={props.editToolDefaultOpen}
                   />
                 </div>

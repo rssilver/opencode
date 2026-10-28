@@ -1,4 +1,5 @@
 import type { Part as PartType, ToolPart } from "@opencode-ai/sdk/v2"
+import type { ThinkingCollapseMode } from "./message-part"
 
 function deletionOnly(part: ToolPart) {
   if (!("metadata" in part.state)) return false
@@ -16,9 +17,13 @@ function deletionOnly(part: ToolPart) {
   return filediff.additions === 0 && typeof filediff.deletions === "number" && filediff.deletions > 0
 }
 
-export function partDefaultOpen(part: PartType, shell = false, edit = false) {
+export function partDefaultOpen(part: PartType, collapse = "no", edit = false) {
   if (part.type !== "tool") return
-  if (part.tool === "bash" || part.tool === "shell") return shell
+  if (part.tool === "bash" || part.tool === "shell") {
+    if (collapse === "yes") return false
+    if (collapse === "once-complete") return part.state.status === "pending" || part.state.status === "running"
+    return true
+  }
   if (part.tool === "edit" || part.tool === "write" || part.tool === "patch" || part.tool === "apply_patch") {
     if (!edit) return false
     return !deletionOnly(part)

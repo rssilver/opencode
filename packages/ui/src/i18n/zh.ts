@@ -66,6 +66,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "全部显示",
   "ui.sessionTurn.diffs.showLess": "收起",
   "ui.sessionTurn.diffs.more": "+{{count}} 个文件",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "重试中",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}} 秒后",

@@ -60,6 +60,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "Бүгдийг харуулах",
   "ui.sessionTurn.diffs.showLess": "Бага харуулах",
   "ui.sessionTurn.diffs.more": "+{{count}} өөр файлууд",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "дахин оролдож байна",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}} секундын дотор",
   "ui.sessionTurn.retry.attempt": "оролдлого #{{attempt}}",

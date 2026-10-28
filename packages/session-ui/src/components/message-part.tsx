@@ -10,6 +10,7 @@ import {
   Switch,
   onCleanup,
   Index,
+  type Accessor,
   type JSX,
   type ComponentProps,
 } from "solid-js"
@@ -170,6 +171,7 @@ export interface MessageProps {
   showAssistantCopyPartID?: string | null
   showReasoningSummaries?: boolean
   useV2Actions?: boolean
+  thinkingCollapseMode?: Accessor<ThinkingCollapseMode>
   comments?: UserMessageComment[]
 }
 
@@ -190,6 +192,8 @@ export type UserMessageComment = {
   }
 }
 
+export type ThinkingCollapseMode = "yes" | "once-complete" | "no"
+
 export interface MessagePartProps {
   part: PartType
   message: MessageType
@@ -203,6 +207,7 @@ export interface MessagePartProps {
   showAssistantCopyPartID?: string | null
   turnDurationMs?: number
   useV2Actions?: boolean
+  thinkingCollapseMode?: Accessor<ThinkingCollapseMode>
 }
 
 function MessageActionButton(
@@ -729,7 +734,9 @@ export function AssistantParts(props: {
   working?: boolean
   showReasoningSummaries?: boolean
   shellToolDefaultOpen?: boolean
+  shellToolCollapseMode?: Accessor<ThinkingCollapseMode>
   editToolDefaultOpen?: boolean
+  thinkingCollapseMode?: Accessor<ThinkingCollapseMode>
 }) {
   const data = useData()
   const emptyParts: PartType[] = []
@@ -811,7 +818,12 @@ export function AssistantParts(props: {
                         showAssistantCopyPartID={props.showAssistantCopyPartID}
                         turnDurationMs={props.turnDurationMs}
                         useV2Actions={props.useV2Actions}
-                        defaultOpen={partDefaultOpen(item()!, props.shellToolDefaultOpen, props.editToolDefaultOpen)}
+                        defaultOpen={partDefaultOpen(
+                          item()!,
+                          props.shellToolCollapseMode?.() ?? (props.shellToolDefaultOpen ? "no" : "yes"),
+                          props.editToolDefaultOpen,
+                        )}
+                        thinkingCollapseMode={props.thinkingCollapseMode}
                       />
                     </Show>
                   </Show>
@@ -955,6 +967,7 @@ export function Message(props: MessageProps) {
             showAssistantCopyPartID={props.showAssistantCopyPartID}
             showReasoningSummaries={props.showReasoningSummaries}
             useV2Actions={props.useV2Actions}
+            thinkingCollapseMode={props.thinkingCollapseMode}
           />
         )}
       </Match>
@@ -968,6 +981,7 @@ export function AssistantMessageDisplay(props: {
   showAssistantCopyPartID?: string | null
   showReasoningSummaries?: boolean
   useV2Actions?: boolean
+  thinkingCollapseMode?: Accessor<ThinkingCollapseMode>
 }) {
   const emptyTools: ToolPart[] = []
   const part = createMemo(() => index(props.parts))
@@ -1028,6 +1042,7 @@ export function AssistantMessageDisplay(props: {
                       message={props.message}
                       showAssistantCopyPartID={props.showAssistantCopyPartID}
                       useV2Actions={props.useV2Actions}
+                      thinkingCollapseMode={props.thinkingCollapseMode}
                     />
                   </Show>
                 )
@@ -1448,6 +1463,7 @@ export function Part(props: MessagePartProps) {
         showAssistantCopyPartID={props.showAssistantCopyPartID}
         turnDurationMs={props.turnDurationMs}
         useV2Actions={props.useV2Actions}
+        thinkingCollapseMode={props.thinkingCollapseMode}
       />
     </Show>
   )
@@ -1758,16 +1774,77 @@ PART_MAPPING["text"] = function TextPartDisplay(props) {
 
 PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
   const data = useData()
+  const i18n = useI18n()
   const part = () => props.part as ReasoningPart
   const streaming = createMemo(
     () => props.message.role === "assistant" && typeof (props.message as AssistantMessage).time.completed !== "number",
   )
   const text = () => readPartText(data.store.part_text_accum_delta, part())
+  const hasNonReasoningContent = createMemo(() => {
+    const messageParts = data.store.part[props.message.id] ?? []
+    return messageParts.some((p) => p.type !== "reasoning" && readPartText(data.store.part_text_accum_delta, p) !== "")
+  })
+
+  const mode = () => props.thinkingCollapseMode?.() ?? "no"
+  const defaultOpen = createMemo(() => {
+    if (mode() === "yes") return false
+    if (mode() === "once-complete") return streaming() && !hasNonReasoningContent()
+    return true
+  })
+  const [userOpen, setUserOpen] = createSignal<boolean | undefined>(undefined)
+  const open = () => userOpen() ?? defaultOpen()
+  // Auto-follow the newest thinking text while streaming, unless the user scrolled up.
+  // Driven by content growth (not a timer) so idle pauses never touch the scroll position.
+  let scrollBox: HTMLDivElement | undefined
+  let pinned = true
+  const follow = (content: HTMLDivElement) => {
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(() => {
+      if (!pinned || !scrollBox || !streaming()) return
+      scrollBox.scrollTop = scrollBox.scrollHeight
+    })
+    observer.observe(content)
+    onCleanup(() => observer.disconnect())
+  }
 
   return (
     <Show when={text()}>
-      <div data-component="reasoning-part" data-timeline-part-id={part().id}>
-        <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
+      <div
+        data-component="reasoning-part"
+        data-timeline-part-id={part().id}
+        data-streaming={streaming() ? "true" : undefined}
+      >
+        <Collapsible open={open()} onOpenChange={(value) => setUserOpen(value)} class="tool-collapsible">
+          <Collapsible.Trigger>
+            <div data-slot="reasoning-part-trigger" class="flex items-center gap-2">
+              <span
+                data-slot="reasoning-part-label"
+                class="min-w-0 flex items-center gap-2 text-14-medium text-text-strong"
+              >
+                <TextShimmer text={i18n.t("ui.sessionTurn.status.thinking")} active={streaming()} />
+              </span>
+              <div data-slot="reasoning-chevron" data-open={open() ? "true" : undefined}>
+                <Icon name="chevron-right" size="small" aria-hidden="true" />
+              </div>
+            </div>
+          </Collapsible.Trigger>
+          <Collapsible.Content>
+            {/* One markdown instance for the part's whole life: the scroll box is only height-bounded
+                while streaming (via CSS), so finishing never remounts and re-renders the text. */}
+            <div
+              ref={scrollBox}
+              data-slot="reasoning-scroll-box"
+              onScroll={(event) => {
+                const el = event.currentTarget
+                pinned = el.scrollHeight - el.scrollTop - el.clientHeight <= 24
+              }}
+            >
+              <div ref={follow}>
+                <PacedMarkdown text={text()} cacheKey={part().id} streaming={streaming()} />
+              </div>
+            </div>
+          </Collapsible.Content>
+        </Collapsible>
       </div>
     </Show>
   )

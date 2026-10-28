@@ -317,6 +317,40 @@
   }
 }
 
+[data-component="reasoning-part"][data-streaming="true"] {
+  position: sticky;
+  top: var(--thinking-panel-top, calc(var(--sticky-header-height, 0px) + 24px));
+  z-index: 15;
+
+  [data-slot="reasoning-scroll-box"] {
+    max-height: var(--thinking-panel-max-height, min(60vh, 520px));
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-weak-base) transparent;
+  }
+}
+
+/* Same padding streaming or not, so the text doesn't shift when the panel is released. */
+[data-slot="reasoning-scroll-box"] {
+  padding-inline-end: 8px;
+}
+
+[data-slot="reasoning-chevron"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease;
+
+  &[data-open="true"] {
+    transform: rotate(90deg);
+  }
+
+  &[data-open="true"]:dir(rtl) {
+    transform: rotate(-90deg);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   [data-component="reasoning-part"] [data-component="markdown"] :not(pre) > code {
     opacity: 0.6;

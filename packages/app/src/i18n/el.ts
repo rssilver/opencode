@@ -984,6 +984,19 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "Ανάπτυξη τμημάτων εργαλείου επεξεργασίας",
   "settings.general.row.editToolPartsExpanded.description":
     "Εμφάνιση τμημάτων του εργαλείου επεξεργασίας, εγγραφής και ενημέρωσης κώδικα που έχουν αναπτυχθεί από προεπιλογή στη γραμμή χρόνου",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "Νέα διάταξη",
   "settings.general.row.newInterface.badge": "Νέο",
   "settings.general.row.newInterface.description":

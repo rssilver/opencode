@@ -1,14 +1,15 @@
 import { describe, expect, test } from "bun:test"
 import type { Part as PartType } from "@opencode-ai/sdk/v2"
+import type { ThinkingCollapseMode } from "./message-part"
 import { partDefaultOpen } from "./part-default-open"
 
 describe("partDefaultOpen", () => {
   test("keeps edited files expanded when enabled", () => {
-    expect(partDefaultOpen(tool("edit", { filediff: { additions: 1, deletions: 1 } }), false, true)).toBe(true)
+    expect(partDefaultOpen(tool("edit", { filediff: { additions: 1, deletions: 1 } }), "no", true)).toBe(true)
   })
 
   test("collapses deletion-only edits when enabled", () => {
-    expect(partDefaultOpen(tool("edit", { filediff: { additions: 0, deletions: 1_200 } }), false, true)).toBe(false)
+    expect(partDefaultOpen(tool("edit", { filediff: { additions: 0, deletions: 1_200 } }), "no", true)).toBe(false)
   })
 
   test("collapses patches containing only deleted files when enabled", () => {
@@ -20,7 +21,7 @@ describe("partDefaultOpen", () => {
             { filePath: "two.ts", type: "delete" },
           ],
         }),
-        false,
+        "no",
         true,
       ),
     ).toBe(false)
@@ -35,18 +36,25 @@ describe("partDefaultOpen", () => {
             { filePath: "two.ts", type: "update" },
           ],
         }),
-        false,
+        "no",
         true,
       ),
     ).toBe(true)
   })
 
-  test("preserves shell defaults", () => {
-    expect(partDefaultOpen(tool("shell", {}), true, false)).toBe(true)
+  test("shell expands when mode is no and collapses when mode is yes", () => {
+    expect(partDefaultOpen(tool("shell", {}), "no")).toBe(true)
+    expect(partDefaultOpen(tool("shell", {}), "yes")).toBe(false)
+  })
+
+  test("shell stays open while running and collapses once complete", () => {
+    expect(partDefaultOpen(tool("shell", {}, "running"), "once-complete")).toBe(true)
+    expect(partDefaultOpen(tool("shell", {}, "completed"), "once-complete")).toBe(false)
+    expect(partDefaultOpen(tool("shell", {}, "error"), "once-complete")).toBe(false)
   })
 })
 
-function tool(name: string, metadata: Record<string, unknown>): PartType {
+function tool(name: string, metadata: Record<string, unknown>, status = "completed"): PartType {
   return {
     id: `part_${name}`,
     sessionID: "session",
@@ -55,12 +63,12 @@ function tool(name: string, metadata: Record<string, unknown>): PartType {
     callID: `call_${name}`,
     tool: name,
     state: {
-      status: "completed",
+      status,
       input: {},
       output: "",
       title: name,
       metadata,
       time: { start: 0, end: 1 },
     },
-  }
+  } as PartType
 }

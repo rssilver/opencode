@@ -943,6 +943,19 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "ขยายส่วนเครื่องมือ edit",
   "settings.general.row.editToolPartsExpanded.description":
     "แสดงส่วนเครื่องมือ edit, write และ patch แบบขยายตามค่าเริ่มต้นในไทม์ไลน์",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "เลย์เอาต์ใหม่",
   "settings.general.row.newInterface.badge": "ใหม่",
   "settings.general.row.newInterface.description":

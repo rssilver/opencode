@@ -66,6 +66,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Показати всі",
   "ui.sessionTurn.diffs.showLess": "Показати менше",
   "ui.sessionTurn.diffs.more": "+ ще {{count}}",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
 
   "ui.sessionTurn.retry.retrying": "повторна спроба",
   "ui.sessionTurn.retry.inSeconds": "за {{seconds}} с",

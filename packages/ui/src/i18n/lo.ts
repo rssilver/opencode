@@ -60,6 +60,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "ສະແດງທັງໝົດ",
   "ui.sessionTurn.diffs.showLess": "ສະແດງໜ້ອຍລົງ",
   "ui.sessionTurn.diffs.more": "+{{count}} ໄຟລ໌ເພີ່ມເຕີມ",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "ກຳລັງລອງໃໝ່",
   "ui.sessionTurn.retry.inSeconds": "ໃນ {{seconds}}s",
   "ui.sessionTurn.retry.attempt": "ພະຍາຍາມ #{{attempt}}",

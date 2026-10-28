@@ -616,6 +616,19 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "edit 도구 항목 펼치기",
   "settings.general.row.editToolPartsExpanded.description":
     "타임라인에서 기본적으로 edit, write, patch 도구 항목을 펼친 상태로 표시합니다",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.wayland.title": "네이티브 Wayland 사용",
   "settings.general.row.wayland.description": "Wayland에서 X11 폴백을 비활성화합니다. 다시 시작해야 합니다.",
   "settings.general.row.wayland.tooltip":

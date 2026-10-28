@@ -60,6 +60,8 @@ export const dict = {
   "ui.sessionTurn.diffs.showAll": "Прикажи ги сите",
   "ui.sessionTurn.diffs.showLess": "Покажете помалку",
   "ui.sessionTurn.diffs.more": "+{{count}} повеќе датотеки",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "се обидува повторно",
   "ui.sessionTurn.retry.inSeconds": "во {{seconds}}с",
   "ui.sessionTurn.retry.attempt": "обид #{{attempt}}",

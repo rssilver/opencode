@@ -878,6 +878,19 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "edit ツールパーツを展開",
   "settings.general.row.editToolPartsExpanded.description":
     "タイムラインで edit、write、patch ツールパーツをデフォルトで展開して表示します",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "新しいレイアウト",
   "settings.general.row.newInterface.badge": "新機能",
   "settings.general.row.newInterface.description":

@@ -20,3 +20,17 @@ export function getRelativeTime(dateString: string, t: Translate): string {
   if (diffHours < 24) return t("common.time.hoursAgo.short", { count: diffHours })
   return t("common.time.daysAgo.short", { count: diffDays })
 }
+
+export function formatCompactDuration(ms: number): string {
+  if (ms <= 0) return "0s"
+  const totalSeconds = Math.floor(ms / 1000)
+  if (totalSeconds < 60) return `${totalSeconds}s`
+  const minutes = Math.floor(totalSeconds / 60)
+  if (minutes < 60) {
+    const seconds = totalSeconds % 60
+    return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`
+  }
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  return mins === 0 ? `${hours}h` : `${hours}h ${mins}m`
+}

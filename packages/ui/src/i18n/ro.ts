@@ -61,6 +61,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Afișează tot",
   "ui.sessionTurn.diffs.showLess": "Afișează mai puțin",
   "ui.sessionTurn.diffs.more": "+{{count}} fișiere",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "se reîncearcă",
   "ui.sessionTurn.retry.inSeconds": "în {{seconds}}s",
   "ui.sessionTurn.retry.attempt": "încercarea #{{attempt}}",

@@ -1,6 +1,7 @@
 import { createStore, reconcile } from "solid-js/store"
 import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { createSimpleContext } from "@opencode-ai/ui/context"
+import type { ThinkingCollapseMode } from "@opencode-ai/session-ui/message-part"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
 
@@ -30,8 +31,12 @@ export interface Settings {
     showStatus: boolean
     showTerminal: boolean
     showReasoningSummaries: boolean
-    shellToolPartsExpanded: boolean
+    collapseShellTools: ThinkingCollapseMode
+    // Legacy boolean replaced by collapseShellTools; still read so saved "expanded" choices carry over.
+    shellToolPartsExpanded?: boolean
     editToolPartsExpanded: boolean
+    collapseThinkingBlocks: ThinkingCollapseMode
+    collapseWorkingSections: boolean
     showCustomAgents: boolean
     mobileTitlebarPosition: "top" | "bottom"
     newLayoutDesigns?: boolean
@@ -185,15 +190,17 @@ const defaultSettings: Settings = {
     autoSave: true,
     releaseNotes: true,
     followup: "steer",
-    showFileTree: false,
-    showNavigation: false,
-    showSearch: false,
-    showStatus: false,
-    showTerminal: false,
-    showReasoningSummaries: false,
-    shellToolPartsExpanded: false,
+    showFileTree: true,
+    showNavigation: true,
+    showSearch: true,
+    showStatus: true,
+    showTerminal: true,
+    showReasoningSummaries: true,
+    collapseShellTools: "once-complete",
     editToolPartsExpanded: false,
-    showCustomAgents: false,
+    collapseThinkingBlocks: "once-complete",
+    collapseWorkingSections: true,
+    showCustomAgents: true,
     mobileTitlebarPosition: "top",
   },
   appearance: {
@@ -403,12 +410,12 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setShowReasoningSummaries(value: boolean) {
           setStore("general", "showReasoningSummaries", value)
         },
-        shellToolPartsExpanded: withFallback(
-          () => store.general?.shellToolPartsExpanded,
-          defaultSettings.general.shellToolPartsExpanded,
+        collapseShellTools: withFallback(
+          () => store.general?.collapseShellTools ?? (store.general?.shellToolPartsExpanded ? "no" : undefined),
+          defaultSettings.general.collapseShellTools,
         ),
-        setShellToolPartsExpanded(value: boolean) {
-          setStore("general", "shellToolPartsExpanded", value)
+        setCollapseShellTools(value: ThinkingCollapseMode) {
+          setStore("general", "collapseShellTools", value)
         },
         editToolPartsExpanded: withFallback(
           () => store.general?.editToolPartsExpanded,
@@ -416,6 +423,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         ),
         setEditToolPartsExpanded(value: boolean) {
           setStore("general", "editToolPartsExpanded", value)
+        },
+        collapseThinkingBlocks: withFallback(
+          () => store.general?.collapseThinkingBlocks,
+          defaultSettings.general.collapseThinkingBlocks,
+        ),
+        setCollapseThinkingBlocks(value: ThinkingCollapseMode) {
+          setStore("general", "collapseThinkingBlocks", value)
+        },
+        collapseWorkingSections: withFallback(
+          () => store.general?.collapseWorkingSections,
+          defaultSettings.general.collapseWorkingSections,
+        ),
+        setCollapseWorkingSections(value: boolean) {
+          setStore("general", "collapseWorkingSections", value)
         },
         showCustomAgents,
         setShowCustomAgents(value: boolean) {

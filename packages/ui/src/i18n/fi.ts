@@ -59,6 +59,8 @@ export const dict: Record<string, string> = {
   "ui.sessionTurn.diffs.showAll": "Näytä kaikki",
   "ui.sessionTurn.diffs.showLess": "Näytä vähemmän",
   "ui.sessionTurn.diffs.more": "+{{count}} muuta tiedostoa",
+  "ui.sessionTurn.workingSummary": "Worked on this section",
+  "ui.sessionTurn.workedFor": "Worked for {{duration}}",
   "ui.sessionTurn.retry.retrying": "yritetään uudelleen",
   "ui.sessionTurn.retry.inSeconds": "{{seconds}} s kuluttua",
   "ui.sessionTurn.retry.attempt": "yritys #{{attempt}}",

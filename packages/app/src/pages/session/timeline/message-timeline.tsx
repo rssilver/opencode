@@ -54,6 +54,7 @@ import type {
 } from "@opencode-ai/sdk/v2"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
+import { formatCompactDuration } from "@/utils/time"
 import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
 import { Popover as KobaltePopover } from "@kobalte/core/popover"
 import { normalize } from "@opencode-ai/session-ui/session-diff"
@@ -77,6 +78,7 @@ import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
+import { buildDisplayRows, type DisplayRow } from "./working-sections"
 
 const emptyMessages: MessageType[] = []
 const emptyParts: PartType[] = []
@@ -138,6 +140,59 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
       </Show>
+    </div>
+  )
+}
+
+type WorkingSectionDisplayRow = Extract<DisplayRow, { kind: "section" }>
+
+function WorkingSectionSummary(props: {
+  row: WorkingSectionDisplayRow
+  centered: boolean
+  expanded: () => boolean
+  onToggle: () => void
+}) {
+  const language = useLanguage()
+  const label = createMemo(() => {
+    if (typeof props.row.durationMs === "number" && props.row.durationMs > 0) {
+      return language.t("ui.sessionTurn.workedFor", { duration: formatCompactDuration(props.row.durationMs) })
+    }
+    return language.t("ui.sessionTurn.workingSummary")
+  })
+
+  return (
+    <div
+      data-slot="session-turn-working-section"
+      data-component="session-turn-working-section"
+      classList={{
+        "min-w-0 w-full max-w-full pt-3": true,
+        "md:max-w-200 2xl:max-w-[1000px]": props.centered,
+        "md:mx-auto": props.centered,
+      }}
+    >
+      <div class="w-full px-4 md:px-5">
+        <button
+          type="button"
+          aria-expanded={props.expanded()}
+          class="flex items-center justify-between gap-2 w-full max-w-full text-left pr-1 pl-0.5 text-12-medium leading-4 text-text-weak transition-colors hover:text-text-strong cursor-pointer"
+          onClick={props.onToggle}
+        >
+          <span data-slot="session-turn-working-section-label">{label()}</span>
+          <Icon
+            name="chevron-down"
+            size="small"
+            aria-hidden="true"
+            style={{
+              transform: props.expanded()
+                ? undefined
+                : document.documentElement.dir === "rtl"
+                  ? "rotate(90deg)"
+                  : "rotate(-90deg)",
+            }}
+            class="size-3.5 shrink-0 select-none transition-transform"
+          />
+        </button>
+      </div>
     </div>
   )
 }
@@ -343,9 +398,6 @@ export function MessageTimeline(props: {
   const assistantMessagesByParent = projection.assistantMessagesByParent
   const lastAssistantGroupKey = projection.lastAssistantGroupKey
   const messageByID = projection.messageByID
-  const messageLastRowIndex = projection.messageLastRowIndex
-  const messageRowIndex = projection.messageRowIndex
-  const timelineRowByKey = projection.rowByKey
   const timelineRows = projection.rows
 
   let prependAnchor: { key: string; offset: number } | undefined
@@ -413,9 +465,82 @@ export function MessageTimeline(props: {
   let resizePinnedIndexes: number[] = []
   let resizePinFrame: number | undefined
   let virtualContent: HTMLDivElement | undefined
+  const workingTurn = (userMessageID: string) => sessionStatus().type !== "idle" && activeMessageID() === userMessageID
+  // Session status can read idle for a moment between provider steps. Also treat a turn as running
+  // while any of its assistant messages is unfinished, so it doesn't fold and unfold mid-stream.
+  const turnInProgress = (userMessageID: string) =>
+    workingTurn(userMessageID) ||
+    (assistantMessagesByParent().get(userMessageID) ?? emptyAssistantMessages).some(
+      (message) => typeof message.time.completed !== "number",
+    )
+
+  const turnDurationMs = (userMessageID: string) => {
+    const message = messageByID().get(userMessageID)
+    if (!message || message.role !== "user") return
+    const end = (assistantMessagesByParent().get(userMessageID) ?? emptyAssistantMessages).reduce<number | undefined>(
+      (max, item) => {
+        const completed = item.time.completed
+        if (typeof completed !== "number") return max
+        if (max === undefined) return completed
+        return Math.max(max, completed)
+      },
+      undefined,
+    )
+    if (typeof end !== "number") return
+    if (end < message.time.created) return
+    return end - message.time.created
+  }
+
+  // Per-assistant-message work span so each collapsed section sums distinct response
+  // durations instead of repeating the whole turn's total. Only rows that resolve to a
+  // specific assistant message contribute; isolated thinking contributes nothing here.
+  const partMessageDurationMs = (row: TimelineRow.TimelineRow): { key: string; duration?: number } | undefined => {
+    if (row._tag !== "AssistantPart" || row.group.type !== "part") return
+    const message = messageByID().get(row.group.ref.messageID) as AssistantMessage | undefined
+    if (!message || typeof message.time.created !== "number") return
+    const completed = typeof message.time.completed === "number" ? message.time.completed : message.time.created
+    return { key: row.group.ref.messageID, duration: completed - message.time.created }
+  }
+
+  const [expandedSections, setExpandedSections] = createStore<Record<string, boolean>>({})
+
+  const assistantPartIsResponse = createMemo(() => (row: TimelineRow.TimelineRow) => {
+    if (row._tag !== "AssistantPart") return false
+    const group = row.group
+    if (group.type !== "part") return false
+    const part = getMsgPart(group.ref.messageID, group.ref.partID)
+    return !!part && part.type === "text" && !!part.text?.trim() && !part.synthetic
+  })
+
+  const isResponseRow = assistantPartIsResponse
+  const isPersistedRow = createMemo(() => (row: TimelineRow.TimelineRow) => {
+    if (!assistantPartIsResponse()(row)) return false
+    if (row._tag !== "AssistantPart") return false
+    const group = row.group
+    if (group.type !== "part") return false
+    const part = getMsgPart(group.ref.messageID, group.ref.partID)
+    return !!part && part.type === "text" && part.metadata?.persist === true
+  })
+
+  const displayRows = createMemo(() => {
+    const base = timelineRows()
+    if (!settings.general.collapseWorkingSections()) {
+      return base.map((row) => ({ kind: "row" as const, key: TimelineRow.key(row), row }))
+    }
+    return buildDisplayRows({
+      rows: base,
+      isResponse: isResponseRow(),
+      isPersisted: isPersistedRow(),
+      durationForUserMessage: (id) => turnDurationMs(id),
+      durationForRow: partMessageDurationMs,
+      isExpanded: (key) => expandedSections[key],
+      isActive: (row) => "userMessageID" in row && turnInProgress(row.userMessageID),
+    })
+  })
+
   const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>({
     get count() {
-      return timelineRows().length
+      return displayRows().length
     },
     getScrollElement: () => listRoot() ?? null,
     observeElementOffset: observeElementOffsetReconnectAware,
@@ -428,12 +553,12 @@ export function MessageTimeline(props: {
       elementScroll(offset, options, instance)
     },
     get getItemKey() {
-      const rows = timelineRows()
+      const items = displayRows()
       return (index: number) => {
-        const row = rows[index]
+        const item = items[index]
         // ResizeObserver can report a removed element after its row has left the projection.
-        if (!row) return `removed:${index}`
-        return TimelineRow.key(row)
+        if (!item) return `removed:${index}`
+        return item.key
       }
     },
     anchorTo: "end",
@@ -446,7 +571,7 @@ export function MessageTimeline(props: {
     paddingEnd: 64,
     rangeExtractor: (range) => {
       const id = activeMessageID()
-      const active = id ? (messageLastRowIndex().get(id) ?? -1) : -1
+      const active = id ? (displayMessageRowIndex().get(id) ?? -1) : -1
       const indexes = defaultRangeExtractor({ ...range, overscan: renderOverscan() })
       return filterVirtualIndexes(
         [...new Set([...resizePinnedIndexes, ...indexes, ...(active < 0 ? [] : [active])])].sort((a, b) => a - b),
@@ -499,7 +624,7 @@ export function MessageTimeline(props: {
   const virtualRowKeys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key as string))
   createEffect(() => {
     props.setRevealMessage?.((id) => {
-      const index = messageRowIndex().get(id)
+      const index = displayMessageRowIndex().get(id)
       if (index === undefined) return
       virtualizer.scrollToIndex(index, { align: "center" })
     })
@@ -936,24 +1061,17 @@ export function MessageTimeline(props: {
     )
   }
 
-  const workingTurn = (userMessageID: string) => sessionStatus().type !== "idle" && activeMessageID() === userMessageID
+  const displayRowByKey = createMemo(() => new Map(displayRows().map((item) => [item.key, item] as const)))
 
-  const turnDurationMs = (userMessageID: string) => {
-    const message = messageByID().get(userMessageID)
-    if (!message || message.role !== "user") return
-    const end = (assistantMessagesByParent().get(userMessageID) ?? emptyAssistantMessages).reduce<number | undefined>(
-      (max, item) => {
-        const completed = item.time.completed
-        if (typeof completed !== "number") return max
-        if (max === undefined) return completed
-        return Math.max(max, completed)
-      },
-      undefined,
-    )
-    if (typeof end !== "number") return
-    if (end < message.time.created) return
-    return end - message.time.created
-  }
+  const displayMessageRowIndex = createMemo(() => {
+    const result = new Map<string, number>()
+    displayRows().forEach((item, index) => {
+      if (item.kind !== "row" || !("userMessageID" in item.row)) return
+      if (result.has(item.row.userMessageID)) return
+      result.set(item.row.userMessageID, index)
+    })
+    return result
+  })
 
   const assistantCopyPartID = (userMessageID: string) => {
     if (workingTurn(userMessageID)) return null
@@ -1012,7 +1130,7 @@ export function MessageTimeline(props: {
     const defaultOpen = createMemo(() => {
       const item = part()
       if (!item) return
-      return partDefaultOpen(item, settings.general.shellToolPartsExpanded(), settings.general.editToolPartsExpanded())
+      return partDefaultOpen(item, settings.general.collapseShellTools(), settings.general.editToolPartsExpanded())
     })
 
     return (
@@ -1032,6 +1150,7 @@ export function MessageTimeline(props: {
                 deferToolContent
                 virtualizeDiff={false}
                 onContentRendered={onSizeChange}
+                thinkingCollapseMode={settings.general.collapseThinkingBlocks}
               />
             )}
           </Show>
@@ -1230,15 +1349,25 @@ export function MessageTimeline(props: {
     return renderTimelineRow(() => props.row, props.onSizeChange)
   }
 
-  function VirtualTimelineRow(props: { rowKey: string }) {
+  function VirtualTimelineRow(props: { rowKey: string; centered: boolean }) {
     let element: HTMLDivElement
     const initialItem = virtualItemByKey().get(props.rowKey)!
-    const initialRow = timelineRowByKey().get(props.rowKey)!
+    const initialDisplay = displayRowByKey().get(props.rowKey)
     const item = createMemo(() => virtualItemByKey().get(props.rowKey) ?? initialItem)
-    const row = createMemo(() => timelineRowByKey().get(props.rowKey) ?? initialRow)
+    const displayRow = createMemo(() => displayRowByKey().get(props.rowKey) ?? initialDisplay)
+    // displayRows() rebuilds its wrapper objects on every streamed token. Unwrap to the projection's
+    // own (stable) row object so the rendered row is updated in place rather than remounted.
+    const row = createMemo(() => {
+      const value = displayRow()
+      return value?.kind === "row" ? value.row : undefined
+    })
+    const section = createMemo(() => {
+      const value = displayRow()
+      return value?.kind === "section" ? value : undefined
+    })
     const tool = () => {
       const value = row()
-      if (value._tag !== "AssistantPart" || value.group.type !== "part") return
+      if (!value || value._tag !== "AssistantPart" || value.group.type !== "part") return
       const part = getMsgPart(value.group.ref.messageID, value.group.ref.partID)
       if (part?.type === "tool") return part
     }
@@ -1262,6 +1391,12 @@ export function MessageTimeline(props: {
       if (contentMeasureFrame !== undefined) cancelAnimationFrame(contentMeasureFrame)
     })
 
+    const handleSizeChange = () => {
+      setReady(true)
+      if (contentMeasureFrame !== undefined) cancelAnimationFrame(contentMeasureFrame)
+      contentMeasureFrame = scheduleConnectedMeasure(element, virtualizer.measureElement)
+    }
+
     return (
       <div
         data-timeline-key={props.rowKey}
@@ -1273,7 +1408,7 @@ export function MessageTimeline(props: {
           height: `${item().size}px`,
           overflow: "clip",
           // Rounded virtual measurements can otherwise clip a framed row's outer paint.
-          "overflow-clip-margin": row()._tag === "TurnGap" ? undefined : "0.5px",
+          "overflow-clip-margin": row()?._tag === "TurnGap" ? undefined : "0.5px",
         }}
       >
         <div
@@ -1283,14 +1418,17 @@ export function MessageTimeline(props: {
           data-index={item().index}
           style={{ "min-height": ready() ? undefined : `${initialItem.size}px` }}
         >
-          <TimelineRowView
-            row={row()}
-            onSizeChange={() => {
-              setReady(true)
-              if (contentMeasureFrame !== undefined) cancelAnimationFrame(contentMeasureFrame)
-              contentMeasureFrame = scheduleConnectedMeasure(element, virtualizer.measureElement)
-            }}
-          />
+          <Show when={row()}>{(value) => <TimelineRowView row={value()} onSizeChange={handleSizeChange} />}</Show>
+          <Show when={section()}>
+            {(value) => (
+              <WorkingSectionSummary
+                row={value()}
+                centered={props.centered}
+                expanded={() => expandedSections[value().key]}
+                onToggle={() => setExpandedSections(value().key, !expandedSections[value().key])}
+              />
+            )}
+          </Show>
         </div>
       </div>
     )
@@ -1831,7 +1969,9 @@ export function MessageTimeline(props: {
             width: "100%",
           }}
         >
-          <For each={virtualRowKeys()}>{(rowKey) => <VirtualTimelineRow rowKey={rowKey} />}</For>
+          <For each={virtualRowKeys()}>
+            {(rowKey) => <VirtualTimelineRow rowKey={rowKey} centered={props.centered} />}
+          </For>
           <Show when={timelineRows().length > 0}>
             <div
               data-timeline-row="bottom-spacer"

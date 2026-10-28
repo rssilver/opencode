@@ -977,6 +977,19 @@ export const dict = {
   "settings.general.row.editToolPartsExpanded.title": "संपादन टूल भागों का विस्तार करें",
   "settings.general.row.editToolPartsExpanded.description":
     "टाइमलाइन में डिफ़ॉल्ट रूप से विस्तारित संपादित करें, लिखें और पैच टूल पार्ट्स दिखाएं",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "नया लेआउट",
   "settings.general.row.newInterface.badge": "नया",
   "settings.general.row.newInterface.description":

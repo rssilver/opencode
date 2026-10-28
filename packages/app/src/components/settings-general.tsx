@@ -209,6 +209,18 @@ export const SettingsGeneral: Component = () => {
     { value: "dark", label: language.t("theme.scheme.dark") },
   ])
 
+  const collapseThinkingBlocksOptions = createMemo((): { value: "yes" | "once-complete" | "no"; label: string }[] => [
+    { value: "yes", label: language.t("settings.general.row.collapseThinkingBlocks.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseThinkingBlocks.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseThinkingBlocks.option.no") },
+  ])
+
+  const collapseShellToolsOptions = createMemo((): { value: "yes" | "once-complete" | "no"; label: string }[] => [
+    { value: "yes", label: language.t("settings.general.row.collapseShellTools.option.yes") },
+    { value: "once-complete", label: language.t("settings.general.row.collapseShellTools.option.onceComplete") },
+    { value: "no", label: language.t("settings.general.row.collapseShellTools.option.no") },
+  ])
+
   const languageOptions = createMemo(() =>
     language.locales.map((locale) => ({
       value: locale,
@@ -360,15 +372,33 @@ export const SettingsGeneral: Component = () => {
         </SettingsRow>
 
         <SettingsRow
-          title={language.t("settings.general.row.shellToolPartsExpanded.title")}
-          description={language.t("settings.general.row.shellToolPartsExpanded.description")}
+          title={language.t("settings.general.row.collapseWorkingSections.title")}
+          description={language.t("settings.general.row.collapseWorkingSections.description")}
         >
-          <div data-action="settings-feed-shell-tool-parts-expanded">
+          <div data-action="settings-collapse-working-sections">
             <Switch
-              checked={settings.general.shellToolPartsExpanded()}
-              onChange={(checked) => settings.general.setShellToolPartsExpanded(checked)}
+              checked={settings.general.collapseWorkingSections()}
+              onChange={(checked) => settings.general.setCollapseWorkingSections(checked)}
             />
           </div>
+        </SettingsRow>
+
+        <SettingsRow
+          title={language.t("settings.general.row.collapseShellTools.title")}
+          description={language.t("settings.general.row.collapseShellTools.description")}
+        >
+          <Select
+            data-action="settings-collapse-shell-tools"
+            options={collapseShellToolsOptions()}
+            current={collapseShellToolsOptions().find((o) => o.value === settings.general.collapseShellTools())}
+            value={(o) => o.value}
+            label={(o) => o.label}
+            onSelect={(option) => option && settings.general.setCollapseShellTools(option.value)}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+            triggerStyle={{ "min-width": "180px" }}
+          />
         </SettingsRow>
 
         <SettingsRow
@@ -381,6 +411,24 @@ export const SettingsGeneral: Component = () => {
               onChange={(checked) => settings.general.setEditToolPartsExpanded(checked)}
             />
           </div>
+        </SettingsRow>
+
+        <SettingsRow
+          title={language.t("settings.general.row.collapseThinkingBlocks.title")}
+          description={language.t("settings.general.row.collapseThinkingBlocks.description")}
+        >
+          <Select
+            data-action="settings-collapse-thinking-blocks"
+            options={collapseThinkingBlocksOptions()}
+            current={collapseThinkingBlocksOptions().find((o) => o.value === settings.general.collapseThinkingBlocks())}
+            value={(o) => o.value}
+            label={(o) => o.label}
+            onSelect={(option) => option && settings.general.setCollapseThinkingBlocks(option.value)}
+            variant="secondary"
+            size="small"
+            triggerVariant="settings"
+            triggerStyle={{ "min-width": "180px" }}
+          />
         </SettingsRow>
       </SettingsList>
     </div>

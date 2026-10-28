@@ -966,6 +966,19 @@ export const dict: Record<string, string> = {
   "settings.general.row.editToolPartsExpanded.title": "সম্পাদনা টুল অংশ প্রসারিত করুন",
   "settings.general.row.editToolPartsExpanded.description":
     "টাইমলাইনে ডিফল্টরূপে প্রসারিত সম্পাদনা, লিখুন এবং প্যাচ টুল অংশগুলি দেখান৷",
+  "settings.general.row.collapseThinkingBlocks.title": "Collapse thinking blocks",
+  "settings.general.row.collapseThinkingBlocks.description": "Collapse reasoning blocks into collapsible sections.",
+  "settings.general.row.collapseThinkingBlocks.option.yes": "Always collapsed",
+  "settings.general.row.collapseThinkingBlocks.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseThinkingBlocks.option.no": "Always expanded",
+  "settings.general.row.collapseShellTools.title": "Collapse shell tool parts",
+  "settings.general.row.collapseShellTools.description": "Collapse shell outputs into collapsible sections.",
+  "settings.general.row.collapseShellTools.option.yes": "Always collapsed",
+  "settings.general.row.collapseShellTools.option.onceComplete": "Collapse when done",
+  "settings.general.row.collapseShellTools.option.no": "Always expanded",
+  "settings.general.row.collapseWorkingSections.title": "Collapse working sections",
+  "settings.general.row.collapseWorkingSections.description":
+    "Collapse tool calls and intermediate output between responses into collapsible sections.",
   "settings.general.row.newInterface.title": "নতুন লেআউট",
   "settings.general.row.newInterface.badge": "নতুন",
   "settings.general.row.newInterface.description":
