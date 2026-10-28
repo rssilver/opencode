@@ -8,11 +8,11 @@ Sorted by impact vs. effort: quick wins first, then large high-impact work, then
 | 2 | Add models and providers from the app (no opencode.json editing) | low–medium | high | form and config writes already exist |
 | 3 | Update the session title as the session progresses | low–medium | medium | small backend change, fixes stale titles |
 | 4 | Interactive "next step" cards at the end of a turn | medium | high | big usability gain; reuses the `question` tool pattern |
-| 5 | Browser logins and bookmarks | low–medium | medium | logins already persist; bookmark import is quick |
+| 5 | Browser password vault so the agent can sign in | medium | high | bookmarks done; vault + agent sign-in left |
 | 6 | Sidebar rework (Devin / Claude Code style) and `@` workspace tagging | high | high | biggest UX change; do after the quick wins |
 | 7 | Deep-wiki for a workspace (Devin style) | medium–high | high | faster, cheaper sessions on big repos |
 | 8 | Session info side panel | medium | medium | easier once the new layout exists |
-| 9 | Rich previews inside the chat | medium–high | high | HTML preview is quick; live pages/video are the long tail |
+| 9 | Interactive visuals in the chat (model decides) | medium | high | simulations, graphs, calculators inline; save/open on the side |
 | 10 | Open files the way a person would (viewers + native apps) | medium | medium | step 1 shares #9's preview; step 2 waits for #14 |
 | 11 | Let a vision model "watch" videos (browser or local files) | medium | medium | builds on browser tools + `view_images`; feeds #15 |
 | 12 | Screenshot + bug catcher (annotate and send) | medium | medium | editor UI is most of the work |
@@ -87,23 +87,24 @@ Clicking a button sends its canned reply as the user's next message; the user ca
   rebuild), and a pinned task list that the model updates while it works (the checklist these apps show
   above the card).
 
-### 5. Browser logins and bookmarks
-The built-in browser already keeps cookies across restarts (`persist:opencode-browser` partition in
-`packages/desktop/src/main/browser-panel.ts`), so signing in once per site already sticks.
-- **Bookmarks (easy):** import from Chrome/Edge's `Bookmarks` JSON file in the profile folder
-  (`%LOCALAPPDATA%\Google\Chrome\User Data\<profile>\Bookmarks`), shown as a bookmarks bar/menu in the
-  panel, plus your own add/remove. Read-only import, no changes to Chrome.
-- **Logins: don't copy Chrome's cookies or passwords.** Chrome encrypts them per user, and on Windows
-  (Chrome 127+) adds app-bound encryption specifically to stop other apps reading them. Working around that is
-  fragile and looks exactly like credential-stealing malware to antivirus tools. Better options:
-  1. A "Sign in to sites" page that opens each site in the panel for you to log in once (cookies persist).
-  2. Import a passwords CSV that *you* export from Chrome's password manager into the OS credential store
-     (Windows Credential Manager), and offer autofill on login forms only when *you* click it. The model
-     never sees or types the passwords.
-  3. Alternative route: drive your real, already-logged-in Chrome through an extension/CDP bridge instead of
-     copying anything (the "Claude in Chrome" approach).
-- Clear-data and per-site sign-out controls in panel settings.
-- Effort: low for bookmarks + sign-in page; medium for the password vault/autofill.
+### 5. Browser password vault so the agent can sign in
+**Done:** bookmarks (Chrome/Edge import, star button, menu); cookies already persist in
+`persist:opencode-browser`, so a site stays logged in until its session expires.
+**Goal:** a password manager for the built-in browser. You log in to a site once yourself; after that the
+agent can sign in again on its own (e.g. when the session expired) without asking you.
+- **Saving:** when you submit a login form in the panel, offer "Save password for github.com?" (like
+  Chrome). Detect forms in the panel's preload (password field + submit). Also allow adding/editing in a
+  "Passwords" settings page, and optional import of a CSV you export from Chrome's password manager.
+- **Storage:** encrypted with Electron `safeStorage` (Windows DPAPI, tied to your Windows account) in the
+  app's userData; never in plain text, never in config files or logs.
+- **Agent sign-in:** a `browser_sign_in({ site })` tool. The main process fills the saved username/password
+  straight into the page's form and submits; the model only gets "signed in" / "failed" back and never sees
+  the values. Matches by exact site origin so a look-alike domain can't receive them.
+- **Permission:** the first time the agent signs in to a site, ask you once ("Allow the agent to sign in to
+  github.com?" — always / this time / no); manage per-site permissions in the Passwords page.
+- **Limits:** 2FA/passkeys/CAPTCHAs still need you; the tool stops and asks. Sites with unusual login flows
+  (multi-step email → password) handled by filling each step when its field appears.
+- Effort: medium. Impact: high.
 
 ### 6. Sidebar rework (Devin / Claude Code style) and `@` workspace tagging
 Restructure the app shell around a session list instead of project → workspace → session drilling.
@@ -151,27 +152,33 @@ A collapsible right-hand panel of cards showing what the session is working with
 - Each card collapsible and remembered per user; panel toggle in the session header; data comes from
   existing session/sync state plus the desktop tool server (previews) — no new backend storage needed.
 
-### 9. Rich previews inside the chat
-Show running apps and media inline in the timeline so they can be tested without leaving the chat.
-- **HTML/CSS snippets:** a "preview" block for an `html` code fence or a written `.html` file, rendered in a
-  sandboxed iframe (`sandbox="allow-scripts"`, no same-origin, `srcdoc`, strict CSP, no network unless the
-  user opts in). Toggle between code and preview; resizable height. Works in web and desktop.
-- **Live pages:** a preview card for a dev-server URL (from `preview_start` / the browser tools) that shows an
-  auto-refreshing screenshot, with "open in browser panel" to interact. A truly interactive inline page is
-  only possible in desktop (a `WebContentsView` positioned over the card, like the browser panel), which
-  also inherits the panel's problems: views paint over dialogs and need hiding while scrolling. Start with
-  screenshots; move to embedded views if it proves worth it.
-- **Video:** short recordings of a page (desktop: `webContents` capture frames → WebM via `MediaRecorder` on
-  a `capturePage` stream, or Electron's `desktopCapturer` for a window) attached to a tool result and played
-  inline with a `<video>` element. Also lets the model "watch" by sampling frames into images for
-  `view_images`-style analysis (most local vision models can't take video directly).
-- Pieces already in place: the browser tools, chat screenshots (tool-part image thumbnails), `view_images`.
+### 9. Interactive visuals in the chat (model decides)
+The model can answer some prompts with a live, interactive result rendered in the chat instead of only text:
+e.g. "would foxes survive in a savannah, who would prey on them?" → a small predator/prey world simulation
+with sliders; a maths question → the function graphed with the answer marked; "compare these loans" → a
+calculator. Like the visualize widgets some AI chat apps have.
+- **Tool:** `show_visual({ title, html })` — the model writes self-contained HTML/CSS/JS (canvas, SVG,
+  or allowed chart/maths libraries from a CDN allow-list, e.g. Chart.js, D3, Plotly, KaTeX, three.js).
+  The tool description says when to use it: simulations, graphs, diagrams, calculators, anything where
+  playing with it beats reading; not for plain answers, and not when the user asked for files in their
+  project. Also usable on its own for an `html` code block the model wrote.
+- **Rendering:** a card in the timeline with a sandboxed iframe (`sandbox="allow-scripts"`, no same-origin,
+  `srcdoc`, CSP limited to the CDN allow-list, no other network), app theme colours passed in as CSS
+  variables so it matches light/dark, auto height with a max and resize handle.
+- **Actions on the card:** open in the side panel (bigger, next to the chat), full screen, reload, view
+  source, and "Save" → writes it as an `.html` file into a per-project visuals folder (or the project, if
+  you pick) and lists it in a "Saved visuals" menu to reopen later. "Edit" sends "change the visual: …"
+  back to the model with the source attached.
+- **Model loop:** errors thrown inside the iframe are reported back as a tool note so the model can fix
+  its own visual; optional screenshot (`view_images` path) so it can check the result.
+- Effort: medium. Impact: high.
+- Later (the old scope): live dev-server preview cards and inline video, see #10/#11.
 
 ### 10. Open files the way a person would (viewers + native apps)
 Click a file in the file tree and see it properly, and let the agent do the same.
 - **Step 1, in-app viewers (no mirroring):** extend the file tabs (`pages/session/file-tabs.tsx`) with viewers
   for images (zoom), PDF (Chromium's built-in viewer), audio/video (`<video>`), rendered Markdown/HTML
-  (sandboxed, shares #9's preview block), CSV as a table, and Office docs as a converted preview
+  (sandboxed, reuses #9's iframe renderer), CSV as a table, and Office docs as a converted preview
   (LibreOffice `--convert-to pdf` when installed). The agent gets `file_view(path)`, which returns a
   screenshot of that viewer through the `view_images` path.
 - **Step 2, native app mirrored:** "Open in default app" launches the OS handler (Blender for `.blend`,
